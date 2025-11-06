@@ -1,10 +1,9 @@
-import React, { Fragment } from 'react'
-import { Tab } from '@headlessui/react'
+import React from 'react'
 import { cn } from '@/utils/index'
 import { LucideIcon } from 'lucide-react'
 
 export interface TabItem {
-  key: string
+  id: string
   label: string
   icon?: LucideIcon
   disabled?: boolean
@@ -13,9 +12,8 @@ export interface TabItem {
 
 export interface TabsProps {
   tabs: TabItem[]
-  selectedIndex?: number
-  onChange?: (index: number) => void
-  children: React.ReactNode[]
+  activeTab: string
+  onChange: (tabId: string) => void
 }
 
 /**
@@ -33,53 +31,41 @@ export interface TabsProps {
  * - Disabled: No hover, opacity 50%, cursor not-allowed
  *
  * Features:
- * - Keyboard navigation (Arrow keys, Enter)
- * - Screen reader support
  * - Optional icons
  * - Optional badges
  * - Disabled state support
  */
-export function Tabs({ tabs, selectedIndex, onChange, children }: TabsProps) {
+export function Tabs({ tabs, activeTab, onChange }: TabsProps) {
   return (
-    <Tab.Group selectedIndex={selectedIndex} onChange={onChange}>
-      <Tab.List className="flex border-b border-neutral-200">
-        {tabs.map((tab) => (
-          <Tab key={tab.key} disabled={tab.disabled} as={Fragment}>
-            {({ selected }) => (
-              <button
-                className={cn(
-                  'flex items-center gap-2 h-11 px-6 text-sm transition-all duration-200 ease-out',
-                  'border-b-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-bluegreen focus-visible:ring-offset-2',
-                  selected
-                    ? 'border-b-bluegreen font-semibold'
-                    : 'border-b-transparent font-normal',
-                  !selected && !tab.disabled && 'hover:border-b-grey',
-                  tab.disabled && 'opacity-50 cursor-not-allowed'
-                )}
-                style={{
-                  color: selected ? '#4AB79F' : '#5E5A58',
-                }}
-                disabled={tab.disabled}
-              >
-                {tab.icon && <tab.icon className="w-[18px] h-[18px]" />}
-                <span>{tab.label}</span>
-                {tab.badge && <span className="ml-1">{tab.badge}</span>}
-              </button>
-            )}
-          </Tab>
-        ))}
-      </Tab.List>
+    <div className="flex border-b border-neutral-200">
+      {tabs.map((tab) => {
+        const isActive = activeTab === tab.id
+        const Icon = tab.icon
 
-      <Tab.Panels className="mt-4">
-        {children.map((child, idx) => (
-          <Tab.Panel
-            key={idx}
-            className="focus:outline-none focus-visible:ring-2 focus-visible:ring-bluegreen focus-visible:ring-offset-2 rounded-md"
+        return (
+          <button
+            key={tab.id}
+            onClick={() => !tab.disabled && onChange(tab.id)}
+            className={cn(
+              'flex items-center gap-2 h-11 px-6 text-sm transition-all duration-200 ease-out',
+              'border-b-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-bluegreen focus-visible:ring-offset-2',
+              isActive
+                ? 'border-b-bluegreen font-semibold'
+                : 'border-b-transparent font-normal',
+              !isActive && !tab.disabled && 'hover:border-b-grey',
+              tab.disabled && 'opacity-50 cursor-not-allowed'
+            )}
+            style={{
+              color: isActive ? '#4AB79F' : '#5E5A58',
+            }}
+            disabled={tab.disabled}
           >
-            {child}
-          </Tab.Panel>
-        ))}
-      </Tab.Panels>
-    </Tab.Group>
+            {Icon && <Icon className="w-[18px] h-[18px]" />}
+            <span>{tab.label}</span>
+            {tab.badge && <span className="ml-1">{tab.badge}</span>}
+          </button>
+        )
+      })}
+    </div>
   )
 }

@@ -32,6 +32,7 @@ export function LeftPanel() {
   const calculationPeriod = useAppStore((state) => state.project.calculationPeriod)
   const advancedSettings = useAppStore((state) => state.project.advancedSettings)
   const displaySettings = useAppStore((state) => state.project.displaySettings)
+  const climate = useAppStore((state) => state.climate.climate)
   const {
     toggleSection,
     openModal,
@@ -41,6 +42,9 @@ export function LeftPanel() {
     updateAdvancedSettings,
     updateDisplaySettings,
   } = useAppStore((state) => state.actions)
+
+  // Generate climate summary for collapsed state
+  const climateSummary = climate ? climate.name : 'No climate selected'
 
   return (
     <div className="w-72 bg-white border-r border-neutral-200 overflow-y-auto">
@@ -133,7 +137,7 @@ export function LeftPanel() {
       <Collapsible
         title="Climate"
         icon={Cloud}
-        summary="Nashville, TN | Indoor Standard"
+        summary={climateSummary}
         expanded={expandedSections.climate}
         onToggle={() => toggleSection('climate')}
       >
@@ -145,10 +149,10 @@ export function LeftPanel() {
             </p>
             <div className="mb-2">
               <p className="text-sm font-bold" style={{ color: '#33302F' }}>
-                No climate selected
+                {climate?.name || 'No climate selected'}
               </p>
               <p className="text-xs" style={{ color: '#5E5A58' }}>
-                Select an exterior climate
+                {climate?.source || 'Select an exterior climate'}
               </p>
             </div>
             <Button
@@ -156,7 +160,7 @@ export function LeftPanel() {
               className="w-full"
               onClick={() => openModal('climate-selection')}
             >
-              Select Climate
+              {climate ? 'Change Climate' : 'Select Climate'}
             </Button>
           </div>
 
