@@ -15,6 +15,9 @@ export interface Layer {
   material: Material;
   thickness: number; // m (stored in SI units)
   name?: string;
+  initialTemperature?: number; // °C
+  initialHumidity?: number; // % RH
+  gridCells?: number | 'auto'; // Grid discretization
 }
 
 export interface Surface {

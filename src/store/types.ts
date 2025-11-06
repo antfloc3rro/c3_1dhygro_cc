@@ -74,6 +74,18 @@ export interface ClimateState {
   selectedAssetId: string | null
   selectedTab: 'weather-stations' | 'standard-conditions' | 'sine-curves' | 'upload-file'
   uploadedFileName: string | null
+  activeSide: 'exterior' | 'interior' // Track which side is being edited
+  exterior: {
+    type: string
+    name: string
+    source: string
+  } | null
+  interior: {
+    type: string
+    name: string
+    source: string
+  } | null
+  // Deprecated: keeping for backward compatibility, use exterior instead
   climate: {
     type: string
     name: string
@@ -219,7 +231,10 @@ export interface AppActions {
   addCase: (caseData: { name: string; status?: StoreCase['status'] }) => void
   updateCase: (caseId: string, updates: Partial<StoreCase>) => void
   duplicateCase: (caseId: string) => void
-  setClimate: (climate: ClimateState['climate']) => void
+  setClimate: (climate: ClimateState['climate']) => void // Deprecated: use setExteriorClimate
+  setClimateActiveSide: (side: 'exterior' | 'interior') => void
+  setExteriorClimate: (climate: ClimateState['exterior']) => void
+  setInteriorClimate: (climate: ClimateState['interior']) => void
 
   // Project settings actions
   updateProjectInfo: (updates: Partial<ProjectState['projectInfo']>) => void

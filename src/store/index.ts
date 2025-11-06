@@ -3,6 +3,20 @@ import { persist, devtools } from 'zustand/middleware'
 import { immer } from 'zustand/middleware/immer'
 import { AppState, UIState, AssemblyState, MaterialState, ClimateState, SimulationState, ProjectState, HistoryState } from './types'
 import { Layer, Monitor, Surface, Project } from '@/types/index'
+import {
+  DEFAULT_PROJECT_NAME,
+  DEFAULT_CASE_NAME,
+  DEFAULT_START_DATE,
+  DEFAULT_DURATION,
+  DEFAULT_TIME_STEP,
+  DEFAULT_DIRECTION,
+  DEFAULT_INCLINATION,
+  DEFAULT_INCREASED_ACCURACY,
+  DEFAULT_ADAPTIVE_TIME_STEP,
+  DEFAULT_GRID_DISCRETIZATION,
+  DEFAULT_UNIT_SYSTEM,
+  DEFAULT_THEME,
+} from '@/constants/defaults'
 
 // Initial states
 const initialUIState: UIState = {
@@ -36,7 +50,7 @@ const initialUIState: UIState = {
   },
   mainLayoutSelectedTab: 0,
   statusBarExpanded: false,
-  theme: 'light',
+  theme: DEFAULT_THEME,
 }
 
 const initialAssemblyState: AssemblyState = {
@@ -70,7 +84,10 @@ const initialClimateState: ClimateState = {
   selectedAssetId: null,
   selectedTab: 'weather-stations',
   uploadedFileName: null,
-  climate: null,
+  activeSide: 'exterior',
+  exterior: null,
+  interior: null,
+  climate: null, // Deprecated: keeping for backward compatibility
 }
 
 const initialSimulationState: SimulationState = {
@@ -88,35 +105,35 @@ const initialProjectState: ProjectState = {
   cases: [
     {
       id: 'case1',
-      name: 'Base Case',
+      name: DEFAULT_CASE_NAME,
       status: 'draft',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     },
   ],
   projectInfo: {
-    name: 'Untitled Project',
+    name: DEFAULT_PROJECT_NAME,
     clientName: '',
     projectNumber: '',
     description: '',
     createdDate: new Date().toISOString(),
   },
   orientation: {
-    direction: 'north',
-    inclination: 90,
+    direction: DEFAULT_DIRECTION,
+    inclination: DEFAULT_INCLINATION,
   },
   calculationPeriod: {
-    startDate: '2024-01-01',
-    duration: '1year',
-    timeStep: 'auto',
+    startDate: DEFAULT_START_DATE(),
+    duration: DEFAULT_DURATION,
+    timeStep: DEFAULT_TIME_STEP,
   },
   advancedSettings: {
-    increasedAccuracy: false,
-    adaptiveTimeStep: true,
-    gridDiscretization: 'auto2',
+    increasedAccuracy: DEFAULT_INCREASED_ACCURACY,
+    adaptiveTimeStep: DEFAULT_ADAPTIVE_TIME_STEP,
+    gridDiscretization: DEFAULT_GRID_DISCRETIZATION,
   },
   displaySettings: {
-    unitSystem: 'si',
+    unitSystem: DEFAULT_UNIT_SYSTEM,
   },
 }
 
@@ -327,7 +344,17 @@ export const useAppStore = create<AppState>()(
           setClimateAsset: (assetId) => set((state) => { state.climate.selectedAssetId = assetId }),
           setClimateTab: (tab) => set((state) => { state.climate.selectedTab = tab }),
           setClimateUploadedFile: (fileName) => set((state) => { state.climate.uploadedFileName = fileName }),
-          setClimate: (climate) => set((state) => { state.climate.climate = climate }),
+          setClimate: (climate) => set((state) => {
+            state.climate.climate = climate
+            // Also set as exterior for backward compatibility
+            state.climate.exterior = climate
+          }),
+          setClimateActiveSide: (side) => set((state) => { state.climate.activeSide = side }),
+          setExteriorClimate: (climate) => set((state) => {
+            state.climate.exterior = climate
+            state.climate.climate = climate // Keep deprecated field in sync
+          }),
+          setInteriorClimate: (climate) => set((state) => { state.climate.interior = climate }),
 
           // Simulation actions
           setSimulationStatus: (status) => set((state) => { state.simulation.status = status }),

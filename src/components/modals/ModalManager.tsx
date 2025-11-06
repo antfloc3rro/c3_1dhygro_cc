@@ -7,6 +7,8 @@ import { mockMaterialCategories, mockMaterialSubcategories, mockMaterials } from
 import { mockClimatePresets } from '@/data/mockClimate';
 import { mockSurfacePresets } from '@/data/mockSurfaces';
 import { mockMonitorPresets } from '@/data/mockMonitors';
+import { DEFAULT_INITIAL_TEMPERATURE, DEFAULT_INITIAL_HUMIDITY } from '@/constants/defaults';
+import { Layer } from '@/types/index';
 
 /**
  * ModalManager component that handles rendering all modals based on openModal state
@@ -18,11 +20,12 @@ export function ModalManager() {
   const selectedLayerId = useAppStore((state) => state.ui.selectedLayerId);
   const selectedSurfaceId = useAppStore((state) => state.ui.selectedSurfaceId);
   const selectedMonitorId = useAppStore((state) => state.ui.selectedMonitorId);
+  const climateActiveSide = useAppStore((state) => state.climate.activeSide);
   const layers = useAppStore((state) => state.assembly.layers);
   const surfaces = useAppStore((state) => state.assembly.surfaces);
   const monitors = useAppStore((state) => state.assembly.monitors);
   const totalThickness = useAppStore((state) => state.assembly.totalThickness);
-  const { updateLayer, updateSurface, addMonitor, updateMonitor, setClimate } = useAppStore(
+  const { addLayer, updateLayer, updateSurface, addMonitor, updateMonitor, setExteriorClimate, setInteriorClimate } = useAppStore(
     (state) => state.actions
   );
 
@@ -42,17 +45,33 @@ export function ModalManager() {
         isOpen={openModal === 'material-database'}
         onClose={closeModal}
         onSelect={(material) => {
+          // Create material object compatible with Layer's Material type
+          const layerMaterial = {
+            id: material.id,
+            name: material.name,
+            thermalConductivity: material.properties.thermalConductivity,
+            bulkDensity: material.properties.bulkDensity,
+            porosity: material.properties.porosity,
+            heatCapacity: material.properties.heatCapacity,
+            vaporResistanceFactor: material.hygrothermal?.waterVaporDiffusionResistance || 1.0,
+          };
+
           if (selectedLayer) {
+            // Update existing layer's material
             updateLayer(selectedLayer.id, {
-              material: {
-                id: material.id,
-                name: material.name,
-                thermalConductivity: material.properties.thermalConductivity,
-                bulkDensity: material.properties.bulkDensity,
-                porosity: material.properties.porosity,
-                heatCapacity: material.properties.heatCapacity,
-              },
+              material: layerMaterial,
             });
+          } else {
+            // Create new layer with selected material
+            const newLayer: Layer = {
+              id: `layer_${Date.now()}`,
+              name: material.name,
+              material: layerMaterial,
+              thickness: 0.1, // Default 100mm
+              initialTemperature: DEFAULT_INITIAL_TEMPERATURE,
+              initialHumidity: DEFAULT_INITIAL_HUMIDITY,
+            };
+            addLayer(newLayer);
           }
         }}
         categories={mockMaterialCategories}
@@ -65,11 +84,18 @@ export function ModalManager() {
         isOpen={openModal === 'climate-selection'}
         onClose={closeModal}
         onSelect={(climate) => {
-          setClimate({
+          const climateData = {
             type: climate.type === 'preset' ? 'steady-state' : 'dynamic',
             name: climate.name,
             source: climate.source,
-          });
+          };
+
+          // Set climate based on active side
+          if (climateActiveSide === 'exterior') {
+            setExteriorClimate(climateData);
+          } else {
+            setInteriorClimate(climateData);
+          }
         }}
         presets={mockClimatePresets}
       />
