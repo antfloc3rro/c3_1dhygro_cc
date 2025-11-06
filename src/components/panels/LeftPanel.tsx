@@ -27,7 +27,7 @@ import { useAppStore } from '@/store/index'
  */
 export function LeftPanel() {
   const expandedSections = useAppStore((state) => state.ui.expandedSections)
-  const { toggleSection } = useAppStore((state) => state.actions)
+  const { toggleSection, openModal } = useAppStore((state) => state.actions)
 
   return (
     <div className="w-72 bg-white border-r border-neutral-200 overflow-y-auto">
@@ -128,7 +128,7 @@ export function LeftPanel() {
             <Button
               variant="secondary"
               className="w-full"
-              onClick={() => console.log('Open climate modal - exterior')}
+              onClick={() => openModal('climate-selection')}
             >
               Select Climate
             </Button>
@@ -150,7 +150,7 @@ export function LeftPanel() {
             <Button
               variant="secondary"
               className="w-full"
-              onClick={() => console.log('Open climate modal - interior')}
+              onClick={() => openModal('climate-selection')}
             >
               Select Climate
             </Button>
