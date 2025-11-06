@@ -1,0 +1,1273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Building Science SaaS API - Design Documentation v2.2 (Revised)</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 20px;
+            background-color: #f9f9f9;
+            color: #333;
+        }
+        h1, h2, h3, h4 {
+            color: #1a237e; /* Dark blue headings */
+            border-bottom: 1px solid #c5cae9; /* Light blue underline */
+            padding-bottom: 5px;
+        }
+        h1 { font-size: 2em; }
+        h2 { font-size: 1.6em; margin-top: 1.5em;}
+        h3 { font-size: 1.3em; margin-top: 1.2em;}
+        h4 { font-size: 1.1em; margin-top: 1em; color: #3949ab; border-bottom: none;} /* Indigo for sub-sub-headings */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background-color: #e8eaf6; /* Light indigo background for headers */
+            color: #1a237e;
+            font-weight: bold;
+        }
+        tr:nth-child(even) {
+            background-color: #f5f5f5;
+        }
+        .diagram {
+            text-align: center;
+            margin: 30px 0;
+            padding: 20px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .diagram img, .diagram pre {
+             max-width: 100%;
+             height: auto;
+             background-color: transparent; /* Ensure pre background doesn't clash */
+             border: none; /* Ensure pre border doesn't clash */
+             padding: 0; /* Remove padding if using pre for diagram */
+        }
+        .json, code, pre {
+            background-color: #eee;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            border: 1px solid #ccc;
+            display: block; /* Ensure pre/json blocks take full width */
+            margin: 10px 0;
+            font-size: 0.95em; /* Slightly smaller font for code */
+        }
+        code {
+            display: inline; /* Inline code snippets */
+            padding: 2px 4px;
+            font-size: 90%;
+            color: #c7254e; /* Bootstrap's code color */
+            background-color: #f9f2f4; /* Light pink background */
+            border-radius: 3px;
+            border: none;
+        }
+        pre > code { /* Styles specific to code within pre */
+            display: block;
+            padding: 10px;
+            color: inherit;
+            background-color: inherit;
+            border-radius: 0;
+        }
+        ul {
+            margin-left: 20px;
+            list-style-type: disc;
+        }
+        li {
+            margin-bottom: 5px;
+        }
+        .note {
+            background-color: #fff9c4; /* Yellow note background */
+            border-left: 5px solid #fdd835; /* Yellow border */
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        .endpoint {
+            font-family: monospace;
+            font-weight: bold;
+            color: #0d47a1; /* Darker blue for endpoints */
+        }
+        .method-get { color: #2e7d32; font-weight: bold; } /* Green */
+        .method-post { color: #1565c0; font-weight: bold; } /* Blue */
+        .method-put { color: #ef6c00; font-weight: bold; } /* Orange */
+        .method-patch { color: #d84315; font-weight: bold; } /* Deep Orange */
+        .method-delete { color: #c62828; font-weight: bold; } /* Red */
+        .json-comment { color: #999; font-style: italic; } /* Style for comments in JSON */
+		
+		/* Mermaid Diagram Styles */
+		.mermaid-container {
+			background: white;
+			padding: 20px;
+			border: 1px solid #ddd;
+			border-radius: 4px;
+			margin: 20px 0;
+			overflow: auto;
+			box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+		}
+
+		.mermaid {
+			font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+			min-width: 100%;
+			display: flex;
+			justify-content: center;
+			margin: 0 auto;
+		}
+
+		.diagram-note {
+			font-size: 0.9em;
+			color: #666;
+			text-align: center;
+			margin-top: 10px;
+		}
+
+		/* Responsive adjustments */
+		@media (max-width: 768px) {
+			.mermaid-container {
+				padding: 10px;
+				overflow-x: auto;
+				-webkit-overflow-scrolling: touch;
+			}
+			
+			.mermaid {
+				min-width: 1200px; /* Allows horizontal scrolling on mobile */
+			}
+		}
+    </style>
+</head>
+<body>
+
+<h1>Building Science SaaS API - Design Documentation v2.2 (Revised)</h1>
+
+<p class="note"><strong>Version:</strong> 2.2 (Revised Draft)<br><strong>Date:</strong> 2025-10-01</p>
+<p>This document outlines the revised design for the RESTful API of the C3RRO Building Science SaaS platform (v2.2). It incorporates Damians feedback on authentication, unit handling, simulation lifecycle, data endpoint abstraction, and parameter definitions, refining the hybrid approach to handle both abstracted models and complex legacy formats.</p>
+
+<h2>1. Project Overview</h2>
+
+<h3>1.1 Purpose</h3>
+<p>To provide a robust, consistent, and developer-friendly RESTful API for interacting with the building science SaaS platform. This API facilitates data management (materials, weather, components, etc.), execution of diverse calculation/simulation models (hygrothermal, energy, etc.), and retrieval of results, powering both first-party web interfaces and third-party integrations. The design aims to abstract complexity where possible while providing mechanisms to interact with detailed legacy formats when necessary.</p>
+
+<h3>1.2 Key Requirements</h3>
+<ul>
+    <li>Support for diverse simulation types (static, dynamic, tools) with consistent interaction patterns.</li>
+    <li>Management of input data assets (materials, weather, templates, components, etc.) via unified CRUD operations with type-specific schemas.</li>
+    <li>Consistent unit handling (SI units by default) with conversion utilities for display/input in other unit systems.</li>
+    <li>Asynchronous job management for long-running simulations with status tracking and result retrieval.</li>
+    <li>Hybrid approach: clean API-specific JSON models for common use cases + import/export mechanisms for complex legacy formats.</li>
+    <li>Comprehensive error handling, pagination for large datasets, and robust authentication/authorization.</li>
+    <li>Developer experience optimized through comprehensive documentation, OpenAPI specifications, and consistent conventions.</li>
+</ul>
+
+<h3>1.3 Core Design Principles</h3>
+<ul>
+    <li><strong>RESTful Design:</strong> Resources identified by URLs, standard HTTP methods, and meaningful status codes.</li>
+    <li><strong>Consistency:</strong> Uniform patterns for request/response formats, error handling, and resource interactions.</li>
+    <li><strong>Simplicity First:</strong> API-specific abstractions using descriptive naming and SI units for typical workflows.</li>
+    <li><strong>Flexibility When Needed:</strong> Import/export mechanisms to handle complex native tool formats without losing detail.</li>
+    <li><strong>Performance:</strong> Efficient pagination, caching-friendly patterns, and asynchronous processing for resource-intensive operations.</li>
+    <li><strong>Developer Experience:</strong> Self-documenting through comprehensive OpenAPI specs, clear error messages, and well-defined resource schemas.</li>
+</ul>
+
+<h2>2. API Versioning</h2>
+
+<h3>2.1 Versioning Strategy</h3>
+<ul>
+    <li><strong>URL-based versioning:</strong> `/v1/`, `/v2/`, etc. in the API path for major versions.</li>
+    <li><strong>Backward compatibility:</strong> Minor changes (new optional fields, new endpoints) within the same major version.</li>
+    <li>Breaking changes require a new major version (e.g., `/v2`).</li>
+</ul>
+
+<h2>3. Authentication and Security</h2>
+
+<h3>3.1 Authentication Mechanism</h3>
+<ul>
+    <li><strong>Bearer Token Authentication:</strong> All API requests must include an <code>Authorization</code> header. The value must be `Bearer YOUR_API_KEY`, where `YOUR_API_KEY` is the secret API key obtained from the account management interface or API.
+        <pre>Authorization: Bearer YOUR_SECRET_API_KEY</pre>
+        <p class="note">The API key provided by the service acts as the Bearer token for authentication purposes. Treat your API keys like passwords; keep them secure and do not expose them in client-side code.</p>
+    </li>
+    <li>API keys are associated with user accounts or organizations (for future multi-tenancy).</li>
+    <li>Keys can be managed (created, listed, revoked) via the <code>/account/api-keys</code> endpoints or potentially through a user interface.</li>
+</ul>
+
+<h3>3.2 Security Enhancements</h3>
+<ul>
+    <li><strong>HTTPS/TLS:</strong> All traffic must use HTTPS with TLS 1.3 or higher.</li>
+    <li><strong>Rate Limiting:</strong> Requests are rate-limited based on user tier/plan. See Section 4.4 for details.</li>
+    <li><strong>Input Validation:</strong> Rigorous validation of all input data against defined schemas (primarily API-specific schemas, with potential pass-through validation for imported complex formats).</li>
+    <li><strong>Audit Logging:</strong> Comprehensive server-side logging of requests and actions.</li>
+    <li><strong>Request Signing (Optional/Specific Use Cases):</strong> While TLS and Bearer token (API Key) authentication provide primary security, request signing might be implemented *selectively* for extremely sensitive operations if deemed necessary. Not required for general API usage.</li>
+    <li><strong>IP Whitelisting (Optional):</strong> Can be configured at the account level for an additional layer of security.</li>
+</ul>
+
+<h3>3.3 Access Control</h3>
+<ul>
+    <li>Permissions are based on the API key used, tied to a specific user.</li>
+    <li>Users can only access and manage their own resources (simulations, data catalogues/assets, etc.).</li>
+    <li>Future enhancements will introduce organization-level resources, roles (admin, member), and sharing capabilities.</li>
+</ul>
+
+<h2>4. Common API Conventions</h2>
+
+<h3>4.1 Standard Request/Response Format</h3>
+
+<p>Successful responses (<code>200 OK</code>, <code>201 Created</code>) follow a structure inspired by JSON:API, prioritizing clear data representation:</p>
+
+<div class="json">
+{
+  "data": {
+    // The primary resource object or array of objects
+    "id": "sim_123",
+    "type": "simulation", // Resource type identifier
+    "attributes": {
+      // Resource-specific attributes using descriptive names (SI units default)
+      "name": "My Hygrothermal Sim",
+      "status": "COMPLETED",
+      "simulation_type": "dynamic/component/1d-hygrothermal", // Descriptive alias for simulation type
+      "createdAt": "2025-04-17T10:00:00Z",
+      // ... other resource attributes
+    }
+  },
+  "meta": { // Metadata about the response
+    "request_id": "req_abc789",
+    "pagination": { // Only present for collections
+      "current_page": 1,
+      "per_page": 20,
+      "total_pages": 5,
+      "total_entries": 95
+    }
+  }
+}
+</div>
+
+<h3>4.2 Error Format</h3>
+
+<p>Error responses (<code>4xx</code>, <code>5xx</code>) use a consistent, structured format based on JSON:API error objects:</p>
+
+<div class="json">
+{
+  "errors": [
+    {
+      "status": "400", // HTTP status code as string
+      "code": "INVALID_PARAMETER", // Machine-readable error code (e.g., enum)
+      "title": "Invalid Parameter", // Short human-readable summary
+      "detail": "The parameter 'thermalConductivity' must be positive. Value provided: -0.1", // Detailed explanation
+      "source": { "pointer": "/data/attributes/configuration/assembly/layers/0/materialProperties/thermalConductivity" } // Optional JSON Pointer to the error source in the request body
+    }
+    // Potentially more error objects if multiple issues exist
+  ],
+  "meta": {
+    "request_id": "req_abc789"
+  }
+}
+</div>
+
+<h3>4.3 Idempotency</h3>
+
+<p>Idempotency is primarily handled through well-defined HTTP routes using resource-based design patterns. RESTful endpoints naturally provide idempotency for most operations:</p>
+
+<ul>
+    <li><code>GET</code> requests are inherently idempotent</li>
+    <li><code>PUT</code> requests replace entire resources idempotently</li>
+    <li><code>DELETE</code> requests can be safely repeated</li>
+    <li><code>POST</code> requests for resource creation should use business-level uniqueness constraints where applicable</li>
+</ul>
+
+<p>For critical operations where additional idempotency protection is needed, clients may provide an <code>Idempotency-Key</code> header (e.g., a UUID), though this is typically unnecessary given proper REST design.</p>
+
+<h3>4.4 Rate Limiting</h3>
+
+<ul>
+    <li>API requests are subject to rate limits based on the user's subscription plan or API key configuration</li>
+    <li>Rate limit details are documented in the API documentation for each endpoint tier</li>
+    <li>If the rate limit is exceeded, the API returns a <code>429 Too Many Requests</code> status code</li>
+    <li>The <code>429</code> response includes a <code>Retry-After</code> header indicating how many seconds the client should wait before retrying</li>
+</ul>
+
+<div class="json">
+// Example 429 Error Response Body
+{
+  "errors": [
+    {
+      "status": "429",
+      "code": "RATE_LIMIT_EXCEEDED",
+      "title": "Rate Limit Exceeded",
+      "detail": "You have exceeded the allowed number of requests per minute. Please wait before making further requests."
+    }
+  ],
+  "meta": { "request_id": "req_def456" }
+}
+
+// Example 429 Response Headers
+// HTTP/1.1 429 Too Many Requests
+// Content-Type: application/json
+// Retry-After: 60
+// ... other headers ...
+</div>
+
+<h3>4.5 Filtering, Sorting, and Pagination</h3>
+
+<h4>Basic Pagination (Always Available)</h4>
+
+<p>Endpoints returning collections of resources support standardized pagination:</p>
+
+<ul>
+    <li><strong>Pagination:</strong> Use page-based pagination with <code>page[number]</code> (1-based index) and <code>page[size]</code> parameters</li>
+    <li>Default values (<code>page[number]=1</code>, <code>page[size]=20</code>) apply if omitted</li>
+    <li>Example: <code>?page[number]=2&page[size]=50</code></li>
+    <li>Pagination details (total entries, total pages) are included in the response <code>meta</code> section</li>
+</ul>
+
+<h4>Filtering and Sorting (Optional Features)</h4>
+
+<p><strong>Note:</strong> Filtering and sorting are marked as optional features not implemented in the initial API release. These may be added in future versions based on client requirements and usage patterns.</p>
+
+<p>When implemented, the intended design would be:</p>
+
+<ul>
+    <li><strong>Filtering:</strong> <code>filter[attribute_name]=value</code> syntax with AND conditions for multiple filters</li>
+    <li><strong>Sorting:</strong> <code>sort=attribute_name</code> syntax with <code>-</code> prefix for descending order</li>
+</ul>
+
+<p>The decision to defer these features allows for:</p>
+<ul>
+    <li>Faster initial implementation and deployment</li>
+    <li>Better understanding of actual client usage patterns</li>
+    <li>Simplified client-side implementation for common use cases</li>
+    <li>Reduced complexity in the initial API surface</li>
+</ul>
+
+<p>Clients requiring complex filtering or sorting should implement these operations client-side using the paginated data.</p>
+
+<h3>4.6 Units Handling</h3>
+
+<p>The API primarily uses <strong>SI units</strong> internally and for representation in standard API request/response bodies by default (e.g., Kelvin for temperature, meters for length, seconds for time, Joules for energy, Watts for power, kg/m³ for density, W/(m·K) for thermal conductivity).</p>
+
+<ul>
+    <li>API-specific schemas clearly define the expected SI unit for each numerical field using the <code>description</code> or custom schema extensions (e.g., <code>x-unit: "W/mK"</code>)</li>
+    <li>Input data provided via standard API endpoints must be in the expected SI units defined by the corresponding API schema</li>
+    <li>Calculation results are generated and returned in SI units via the results endpoints</li>
+    <li>A dedicated utility endpoint (<code>POST /utilities/units/convert</code>) is provided for converting values between different unit systems</li>
+    <li>Reference data listing supported units, their types, and systems is available via <code>GET /references/units</code></li>
+</ul>
+
+<h4>Handling Imported Units (Hybrid Approach)</h4>
+
+<p>When importing data via native file formats or expert JSON (e.g., <code>POST /simulations/import</code>), the API handles data that might be in non-SI units:</p>
+
+<ul>
+    <li>The import request can include an optional <code>source_units</code> field (e.g., <code>"IP"</code>, <code>"SI"</code>, <code>"Detect"</code>) to declare the unit system of the provided data</li>
+    <li>If no unit system is specified, the API attempts to detect the unit system from the data format and content</li>
+    <li>The API converts all data to SI units internally for processing and storage</li>
+    <li>Imported data validation accounts for the declared or detected unit system</li>
+</ul>
+
+<h2>5. Simulation Endpoints</h2>
+
+<h3>5.1 Simulation States</h3>
+<p>Simulations progress through well-defined states during their lifecycle:</p>
+<ul>
+    <li><code>READY</code>: Simulation created and configured, ready to run</li>
+    <li><code>VALIDATING</code>: Input validation and consistency checking in progress</li>
+    <li><code>QUEUED</code>: Validation passed, simulation queued for execution</li>
+    <li><code>RUNNING</code>: Simulation actively executing</li>
+    <li><code>POST_PROCESSING</code>: Simulation execution complete, results being processed</li>
+    <li><code>COMPLETED</code>: Simulation successfully completed with results available</li>
+    <li><code>FAILED</code>: Simulation failed during any stage (validation, execution, or post-processing)</li>
+    <li><code>CANCELLED</code>: Simulation cancelled by user or system</li>
+</ul>
+
+<h3>5.2 Core Simulation Endpoints</h3>
+<table>
+<tr><th>Method</th><th>Endpoint</th><th>Description</th><th>Result Status</th></tr>
+<tr><td class="method-get">GET</td><td class="endpoint">/simulations</td><td>List simulations accessible to the user. Supports pagination only.</td><td>200 OK</td></tr>
+<tr><td class="method-post">POST</td><td class="endpoint">/simulations</td><td>Create a new simulation using the API's standard JSON model (SI units). The simulation starts in <code>READY</code> state.</td><td>201 Created</td></tr>
+<tr><td class="method-get">GET</td><td class="endpoint">/simulations/{simulation_id}</td><td>Get full details of a specific simulation.</td><td>200 OK</td></tr>
+<tr><td class="method-put">PUT</td><td class="endpoint">/simulations/{simulation_id}</td><td>Replace entire simulation configuration. Only allowed when status is <code>READY</code> or <code>FAILED</code>.</td><td>200 OK</td></tr>
+<tr><td class="method-patch">PATCH</td><td class="endpoint">/simulations/{simulation_id}</td><td>Partially update simulation (e.g., name, description, specific config sections). Uses JSON Merge Patch. Limited when <code>RUNNING</code>.</td><td>200 OK</td></tr>
+<tr><td class="method-delete">DELETE</td><td class="endpoint">/simulations/{simulation_id}</td><td>Delete a simulation and its results. Can be called in any state.</td><td>204 No Content</td></tr>
+<tr><td class="method-post">POST</td><td class="endpoint">/simulations/{simulation_id}/run</td><td>Start/queue simulation execution. Only allowed when status is <code>READY</code> or <code>FAILED</code>.</td><td>202 Accepted</td></tr>
+<tr><td class="method-post">POST</td><td class="endpoint">/simulations/{simulation_id}/cancel</td><td>Cancel a running or queued simulation. Only allowed when status is <code>VALIDATING</code>, <code>QUEUED</code>, or <code>RUNNING</code>.</td><td>202 Accepted</td></tr>
+<tr><td class="method-get">GET</td><td class="endpoint">/simulations/{simulation_id}/status</td><td>Get current execution status and progress. Used for polling during asynchronous execution.</td><td>200 OK</td></tr>
+<tr><td class="method-get">GET</td><td class="endpoint">/simulations/{simulation_id}/export</td><td>Export simulation configuration to various formats. Default is the API's standard JSON format (SI units). May support other formats/units via query parameters (e.g., <code>?format=native-wufi-pro&units=IP</code>).</td><td>200 OK</td></tr>
+<tr><td class="method-post">POST</td><td class="endpoint">/simulations/import</td><td>Create a simulation from an imported file format (e.g., native tool formats like <code>.wufi</code>, <code>.phpp</code>) or potentially a complex "expert" JSON structure. Accepts multipart/form-data or JSON specifying source. Can specify <code>source_units</code>. (See Hybrid Approach in Section 12.2).</td><td>201 Created / 202 Accepted</td></tr>
+</table>
+
+<p class="note"><strong>Note on Simulation Creation:</strong> The primary <code>POST /simulations</code> endpoint is used for creating simulations defined by the API's standard, abstracted JSON schemas (in SI units). The specific type is determined by the <code>simulation_type</code> field in the request body (See Section 5.4).</p>
+
+<p class="note"><strong>Note on <code>run</code> and <code>cancel</code> Actions:</strong> Using dedicated <code>POST</code> endpoints on action sub-resources (<code>/run</code>, <code>/cancel</code>) returning <code>202 Accepted</code> clearly signals the initiation of an asynchronous process (which now includes validation) and is preferred for triggering state transitions involving background tasks.</p>
+
+<p class="note"><strong>Note on <code>PATCH</code> Semantics:</strong> Using JSON Merge Patch (RFC 7396), providing <code>null</code> for a field indicates it should be removed/reset to its default or considered absent. Only fields present in the PATCH request are modified.</p>
+
+<h3>5.3 Specific Simulation Types (Conceptual Categories)</h3>
+<p>The structure within the <code>configuration</code> object of a simulation JSON (when using the standard <code>POST /simulations</code> endpoint) will vary based on the <code>simulation_type</code>. API-specific schemas (defining structure and expected SI units) for each supported type are available via the <code>/schemas/simulations/{type_path}</code> endpoints.</p>
+
+<p>Supported simulation types include:</p>
+<ul>
+    <li><strong>Static Calculations:</strong> <code>static/component/u-value</code>, <code>static/component/condensation-check</code></li>
+    <li><strong>Dynamic Simulations:</strong> <code>dynamic/component/1d-hygrothermal</code>, <code>dynamic/component/2d-thermal</code></li>
+    <li><strong>Building-Level:</strong> <code>dynamic/building/energy-demand</code>, <code>dynamic/building/passive-house</code></li>
+</ul>
+
+<h3>5.4 Standard API Model Example (POST /simulations)</h3>
+<p>This represents the typical JSON structure for creating a simulation via the main <code>POST /simulations</code> endpoint, using the API's clean, descriptive model with SI units.</p>
+
+<div class="json">
+// POST /simulations Request Body (API-Specific JSON Model, SI Units)
+{
+  "data": {
+    "type": "simulation",
+    "attributes": {
+      "name": "Example 1D Hygrothermal Analysis",
+      "description": "Wall assembly moisture performance evaluation",
+      "simulation_type": "dynamic/component/1d-hygrothermal", // Determines configuration schema
+      "configuration": { // Structure defined by API schema for this simulation type
+        "calculationParameters": {
+          "startDate": "2024-01-01T00:00:00Z",
+          "endDate": "2025-01-01T00:00:00Z",
+          "timeStepSeconds": 3600, // SI: seconds
+          "initializationPeriodDays": 30
+        },
+        "assembly": {
+          "layers": [
+            { "materialAssetId": "asset_mat_concrete123", "thickness": 0.2032 }, // SI: meters
+            { "materialAssetId": "asset_mat_insulation456", "thickness": 0.1524 } // SI: meters
+          ],
+          "boundaryConditions": {
+            "interior": { "type": "convective", "heatTransferCoefficient": 7.69, "waterVapourCoefficient": 3.8e-8 }, // SI units
+            "exterior": { "type": "climate", "climateAssetId": "asset_weather_chicago789", "windDrivenRainCoefficient": 0.7 }
+          }
+        },
+        "outputControl": {
+          "selectedVariables": ["temperature", "relativeHumidity"],
+          "reportingIntervalHours": 1
+        },
+        "referencedDataAssets": [
+          { "id": "asset_mat_concrete123", "type": "material" },
+          { "id": "asset_mat_insulation456", "type": "material" },
+          { "id": "asset_weather_chicago789", "type": "weather" }
+        ]
+      },
+      "control": { // Optional control parameters
+        "priority": "normal",
+        "notifications": [ { "event": "completed", "email": "user@example.com" } ]
+      },
+      "metadata": { // Optional user-defined metadata
+        "tags": ["project-beta", "exterior-wall"],
+        "customFields": { "clientRef": "ClientProjectXYZ" }
+      }
+    }
+  }
+}
+</div>
+
+<h3>5.5 Simulation Import (Hybrid Approach Element)</h3>
+<p>The <code>POST /simulations/import</code> endpoint supports the creation of simulations from external data formats, crucial for handling complex configurations or integrating with existing workflows and tools. It typically accepts <code>multipart/form-data</code> for file uploads or a JSON body specifying the source.</p>
+
+<p>This endpoint is key to the <strong>hybrid approach</strong> for handling complexity and non-SI units (see Section 12.2).</p>
+
+<p><strong>Request Body Examples:</strong></p>
+
+<div class="json">
+// Example 1: Importing from a native file format via URL (potentially in IP units)
+{
+  "source_format": "wufi-pro-6", // Identifier for the native format (e.g., from GET /references/file-formats)
+  "source_url": "https://example.com/path/to/input_imperial.w6p", // URL accessible by the API server
+  "source_units": "IP", // Explicitly declare units in source (optional, API tries to detect)
+  "simulation_name": "Imported WUFI Pro 6 Sim (IP)", // Optional: name for the new simulation resource
+  "import_options": { // Optional: format-specific import directives
+    "map_materials_to_database": true,
+    "default_climate_if_missing": "asset_weather_ref_chicago"
+  }
+}
+</div>
+
+<div class="json">
+// Example 2: Importing from embedded native file data (Base64)
+{
+  "source_format": "delphin-5",
+  "source_data": "BASE64_ENCODED_DELPHIN_FILE_CONTENT_HERE", // Base64 encoded file content
+  "source_units": "SI", // Optional, declare units
+  "simulation_name": "Imported Delphin 5 Project"
+}
+</div>
+
+<div class="json">
+// Example 3: Importing from an "Expert" JSON structure (Advanced Use)
+{
+  "source_format": "wufi-passive-json-expert-v1", // Special identifier for complex JSON mirroring native structure
+  "source_units": "IP", // Can specify units even for expert JSON if format allows both
+  "source_data": { /* Massive, complex JSON object with potentially non-descriptive names and IP unit values */ },
+  "simulation_name": "Expert JSON Passive House Import (IP)"
+}
+</div>
+
+<p><strong>Response:</strong></p>
+
+<ul>
+    <li>If the import and simulation resource creation is quick, it might return <code>201 Created</code> with the new simulation resource (whose <code>configuration</code> will be translated to SI, but <code>origin_details</code> might reflect the import source/units).</li>
+    <li>If the import parsing/conversion is potentially time-consuming, it may return <code>202 Accepted</code> with a <code>Location</code> header pointing to the simulation resource or its status endpoint, similar to asynchronous runs. The status might cycle through <code>IMPORTING</code>, <code>READY</code>.</li>
+</ul>
+
+<p class="note">Using <code>POST /simulations/import</code> is the <strong>recommended way</strong> to ingest complex simulation setups originating from external tools or files, preserving their full detail and handling potential non-SI units. The API backend is responsible for parsing and converting to the internal SI-based representation where needed.</p>
+
+<h2>6. Data Endpoints (Catalogues and Assets)</h2>
+
+<p>These endpoints manage the data assets used as inputs for simulations (e.g., materials, weather files, window definitions, component assemblies, templates, internal loads) and the catalogues used to organize them. The system uses a model where:</p>
+
+<ul>
+<li><strong>Assets</strong> are the core data items (e.g., a specific material definition, a weather file). They have an <code>asset_type</code> and belong to an owner.</li>
+<li><strong>Catalogues</strong> are named collections used to group assets of a <em>single, specific</em> <code>asset_type</code>. Catalogues also belong to an owner and have a defined <code>visibility</code> (e.g., <code>private</code>, <code>tenant</code>, <code>public</code>).</li>
+<li>The relationship between assets and catalogues is <strong>many-to-many</strong>: an asset can be linked to multiple catalogues (of the same <code>asset_type</code>), and a catalogue links to multiple assets.</li>
+</ul>
+
+<p>Payloads for creating/updating assets via these endpoints must conform to the API-specific schemas (using SI units) associated with the asset type.</p>
+
+<h3>6.1 Data Asset Types</h3>
+<p>The specific types of data assets supported are defined by the system. Examples include:</p>
+<ul>
+<li><code>material</code></li>
+<li><code>weather</code></li>
+<li><code>window_definition</code></li>
+<li><code>component_assembly</code></li>
+<li><code>internal_load_schedule</code></li>
+<li><code>simulation_template</code></li>
+<li>... (others as needed)</li>
+</ul>
+
+<p>A list of supported asset types can be retrieved via <code>GET /references/asset-types</code>.</p>
+
+<h3>6.2 Asset Endpoints</h3>
+<p>Manage the core data assets independently.</p>
+<table>
+<tr><th>Method</th><th>Endpoint</th><th>Description</th><th>Result Status</th></tr>
+<tr><td class="method-post">POST</td><td class="endpoint">/data/assets</td><td>Create a new data asset. Request body must include <code>asset_type</code> and <code>attributes</code> conforming to the API-specific schema for that type (using SI units). The asset is initially not linked to any catalogue.</td><td>201 Created</td></tr>
+<tr><td class="method-get">GET</td><td class="endpoint">/data/assets</td><td>List assets accessible to the user. Supports pagination only. Note: For practical use, clients typically need to filter by <code>asset_type</code> at minimum.</td><td>200 OK</td></tr>
+<tr><td class="method-get">GET</td><td class="endpoint">/data/assets/{asset_id}</td><td>Get full details of a specific asset (structure based on its type, SI units).</td><td>200 OK</td></tr>
+<tr><td class="method-put">PUT</td><td class="endpoint">/data/assets/{asset_id}</td><td>Replace the entire asset data. Request body must conform to the API-specific schema for the asset's type (using SI units). Requires ownership.</td><td>200 OK</td></tr>
+<tr><td class="method-patch">PATCH</td><td class="endpoint">/data/assets/{asset_id}</td><td>Partially update asset data (e.g., name, specific properties). Uses JSON Merge Patch. Requires ownership. (API schema, SI units).</td><td>200 OK</td></tr>
+<tr><td class="method-delete">DELETE</td><td class="endpoint">/data/assets/{asset_id}</td><td>Delete a user-owned asset. This will also remove all links to this asset from any catalogues.</td><td>204 No Content</td></tr>
+<tr><td class="method-get">GET</td><td class="endpoint">/data/assets/{asset_id}/timeseries</td><td>(Specific to asset types like <code>weather</code>) Get actual timeseries data (supports time slicing, variable selection, potentially aggregation). Uses pagination for large datasets.</td><td>200 OK</td></tr>
+<tr><td class="method-get">GET</td><td class="endpoint">/data/assets/{asset_id}/catalogues</td><td>List catalogues that this specific asset is linked to and are visible to the user. Supports pagination.</td><td>200 OK</td></tr>
+</table>
+
+<h3>6.3 Catalogue Endpoints</h3>
+<p>Manage catalogues used for grouping assets.</p>
+<table>
+<tr><th>Method</th><th>Endpoint</th><th>Description</th><th>Result Status</th></tr>
+<tr><td class="method-get">GET</td><td class="endpoint">/data/catalogues</td><td>List catalogues accessible to the user. Supports pagination only. Note: For practical use, clients typically need to filter by <code>asset_type</code> at minimum.</td><td>200 OK</td></tr>
+<tr><td class="method-post">POST</td><td class="endpoint">/data/catalogues</td><td>Create a new, empty catalogue. Request body includes <code>name</code>, <code>description</code>, the specific <code>asset_type</code> this catalogue will hold, and <code>visibility</code> (<code>private</code>, <code>tenant</code>, <code>public</code>).</td><td>201 Created</td></tr>
+<tr><td class="method-get">GET</td><td class="endpoint">/data/catalogues/{catalogue_id}</td><td>Get details of a specific catalogue (name, description, asset_type, owner, visibility, potentially asset count).</td><td>200 OK</td></tr>
+<tr><td class="method-patch">PATCH</td><td class="endpoint">/data/catalogues/{catalogue_id}</td><td>Update catalogue metadata (e.g., name, description, visibility). Requires ownership.</td><td>200 OK</td></tr>
+<tr><td class="method-delete">DELETE</td><td class="endpoint">/data/catalogues/{catalogue_id}</td><td>Delete a user-owned catalogue. This only deletes the catalogue itself, not the assets it linked to. Links are removed.</td><td>204 No Content</td></tr>
+</table>
+
+<h3>6.4 Catalogue Asset Link Endpoints</h3>
+<p>Manage the links between existing assets and catalogues.</p>
+<table>
+<tr><th>Method</th><th>Endpoint</th><th>Description</th><th>Result Status</th></tr>
+<tr><td class="method-get">GET</td><td class="endpoint">/data/catalogues/{catalogue_id}/assets</td><td>List assets <em>linked</em> to this specific catalogue. Returns asset summaries. Supports pagination only. User must have visibility of the catalogue.</td><td>200 OK</td></tr>
+<tr><td class="method-post">POST</td><td class="endpoint">/data/catalogues/{catalogue_id}/asset_links</td><td>Link an existing asset to this catalogue. Request body: <code>{ "asset_id": "asset_xyz123" }</code>. Requires write access to the catalogue and read access to the asset. The asset's type must match the catalogue's <code>asset_type</code>.</td><td>201 Created / 200 OK (if link already exists)</td></tr>
+<tr><td class="method-delete">DELETE</td><td class="endpoint">/data/catalogues/{catalogue_id}/asset_links/{asset_id}</td><td>Unlink a specific asset from this catalogue. Requires write access to the catalogue. Does not delete the asset itself.</td><td>204 No Content</td></tr>
+</table>
+
+<h3>6.5 Data Asset Actions</h3>
+<p>Endpoints for specific actions related to data assets that don't fit the standard CRUD or linking patterns.</p>
+<table>
+<tr><th>Method</th><th>Endpoint</th><th>Description</th><th>Result Status</th></tr>
+<tr><td class="method-post">POST</td><td class="endpoint">/data/assets/actions/approximate-material</td><td>(Utility) Calculate full hygrothermal properties for a material from basic inputs (e.g., density, type). Request body specifies inputs; response provides the calculated full dataset (in API material format, SI units). Does not create a persistent asset.</td><td>200 OK</td></tr>
+</table>
+
+<p class="note"><strong>Schema Association:</strong> The API-specific schemas (available via <code>/schemas/data/{asset_type}</code>) define the expected structure and SI units for the <code>attributes</code> payload when creating or updating an asset using <code>POST /data/assets</code> or <code>PUT/PATCH /data/assets/{asset_id}</code>.</p>
+
+<p class="note"><strong>Referencing Assets in Simulations:</strong> Simulation configurations (Section 5.4, 12.1) reference data assets directly by their unique <code>asset_id</code> (e.g., <code>asset_mat_concrete123</code>), regardless of which catalogues they might be linked to.</p>
+
+<h2>7. Results Endpoints (Nested under Simulations)</h2>
+
+<p>Access simulation results via sub-resources of a specific simulation. Access typically requires the simulation to be in the <code>COMPLETED</code> state. Results availability can be checked through the simulation's status or by attempting to access the results endpoints directly. Results are returned in SI units.</p>
+
+<table>
+    <tr><th>Method</th><th>Endpoint</th><th>Description</th></tr>
+    <tr><td class="method-get">GET</td><td class="endpoint">/simulations/{simulation_id}/results</td><td>Get summary or entry point for simulation results. May list available result types and endpoints.</td></tr>
+    <tr><td class="method-get">GET</td><td class="endpoint">/simulations/{simulation_id}/results/summary</td><td>Get key calculated results and summary metrics (e.g., U-value, energy demand, max temp). Format depends on simulation type. (SI units).</td></tr>
+    <tr><td class="method-get">GET</td><td class="endpoint">/simulations/{simulation_id}/results/timeseries</td><td>Get timeseries data (e.g., temperature, humidity, heat flux over time). Supports pagination, variable selection (<code>?variable=temperature&variable=humidity</code>), time slicing (<code>?start=...&end=...</code>), potentially spatial filtering (<code>?layer=2</code>), and aggregation (<code>?aggregate=daily</code>). (SI units).</td></tr>
+    <tr><td class="method-get">GET</td><td class="endpoint">/simulations/{simulation_id}/results/reports/{format}</td><td>Generate and retrieve a formatted report (e.g., <code>pdf</code>, <code>html</code>, <code>docx</code>). May be cached or generated on-demand.</td></tr>
+    <tr><td class="method-get">GET</td><td class="endpoint">/simulations/{simulation_id}/results/download</td><td>Download a comprehensive results package (e.g., zip file with all outputs). May redirect to cloud storage for large files.</td></tr>
+    <tr><td class="method-get">GET</td><td class="endpoint">/simulations/{simulation_id}/results/logs</td><td>Get execution logs, warnings, and detailed messages from the simulation run. Useful for debugging failed simulations.</td></tr>
+</table>
+
+<h2>8. Utility Endpoints</h2>
+
+<h3>8.1 Unit Conversion</h3>
+<table>
+    <tr><th>Method</th><th>Endpoint</th><th>Description</th></tr>
+    <tr><td class="method-post">POST</td><td class="endpoint">/utilities/units/convert</td><td>Convert values between different unit systems (e.g., SI ↔ IP). Supports individual values and arrays.</td></tr>
+</table>
+
+<div class="json">
+// POST /utilities/units/convert Request Body
+{
+  "conversions": [
+    {
+      "value": 273.15,
+      "fromUnit": "K", // Kelvin
+      "toUnit": "degF", // Fahrenheit
+      "quantityType": "temperature" // Optional: helps with ambiguous unit names
+    },
+    {
+      "value": 0.5,
+      "fromUnit": "W/mK",
+      "toUnit": "BTU*in/(hr*ft2*degF)",
+      "quantityType": "thermal_conductivity"
+    }
+  ]
+}
+
+// POST /utilities/units/convert Response Body
+{
+  "data": {
+    "results": [
+      {
+        "originalValue": 273.15,
+        "convertedValue": 32.0,
+        "fromUnit": "K",
+        "toUnit": "degF",
+        "quantityType": "temperature"
+      },
+      {
+        "originalValue": 0.5,
+        "convertedValue": 3.467,
+        "fromUnit": "W/mK",
+        "toUnit": "BTU*in/(hr*ft2*degF)",
+        "quantityType": "thermal_conductivity"
+      }
+    ]
+  },
+  "meta": { "request_id": "req_uvw234" }
+}
+</div>
+
+<h3>8.2 File Format Conversion</h3>
+<table>
+    <tr><th>Method</th><th>Endpoint</th><th>Description</th></tr>
+    <tr><td class="method-post">POST</td><td class="endpoint">/utilities/convert/file</td><td>Convert between different file formats (e.g., native tool formats ↔ API JSON). List of supported formats via <code>GET /references/file-formats</code>. May be asynchronous for complex conversions.</td></tr>
+</table>
+
+<div class="json">
+// POST /utilities/convert/file Request Body (converting native to API standard)
+{
+  "sourceFormat": "wufi-material-dat-v6", // Identifier for source format
+  "targetFormat": "api-material-json-v1", // Identifier for target API JSON asset format (SI units)
+  "sourceData": "BASE64_ENCODED_MATERIAL_DAT_FILE_CONTENT", // Base64 encoded source data
+  "conversionOptions": { // Optional: format-specific options
+     "sourceUnits": "SI" // Optional hint about units in sourceData
+  }
+}
+
+// POST /utilities/convert/file Response Body (200 OK for synchronous conversion)
+{
+  "data": {
+    // Contains the converted data in the target format (e.g., API-specific Material JSON)
+    "assetType": "material", // Indicates the type of the resulting data structure
+    "attributes": {
+        "name": "Converted Material",
+        "densityBulk": 1200, // kg/m³ (SI)
+        "thermalConductivityDry": 0.5, // W/(m·K) (SI)
+        // ... other fields conforming to the API material schema (SI units) ...
+    }
+  },
+  "meta": {
+       "requestId": "req_jkl456",
+       "warnings": ["Some function curve data required approximation."]
+  }
+}
+</div>
+
+<h2>9. Account Endpoints</h2>
+
+<h3>9.1 Usage and Limits</h3>
+<table>
+    <tr><th>Method</th><th>Endpoint</th><th>Description</th></tr>
+    <tr><td class="method-get">GET</td><td class="endpoint">/account/usage</td><td>Get API usage metrics for the current billing period (e.g., simulation runs, API calls).</td></tr>
+    <tr><td class="method-get">GET</td><td class="endpoint">/account/limits</td><td>Get account limits (e.g., max simulations, data storage, rate limits per endpoint).</td></tr>
+</table>
+
+<h3>9.2 API Key Management</h3>
+<table>
+    <tr><th>Method</th><th>Endpoint</th><th>Description</th></tr>
+    <tr><td class="method-get">GET</td><td class="endpoint">/account/api-keys</td><td>List API keys associated with the account (excluding the secret token).</td></tr>
+    <tr><td class="method-post">POST</td><td class="endpoint">/account/api-keys</td><td>Create a new API key. Request might include optional description or scope limitations.</td></tr>
+    <tr><td class="method-delete">DELETE</td><td class="endpoint">/account/api-keys/{key_prefix}</td><td>Revoke/delete an API key using its unique prefix or ID.</td></tr>
+</table>
+
+<p class="note">Creating a key (<code>POST /account/api-keys</code>) is the <strong>only time</strong> the full API key secret is returned in the response. Store it securely immediately, as it cannot be retrieved again.</p>
+
+<h2>10. Schema Endpoints</h2>
+
+<p>Provide OpenAPI 3.0+ schemas for request/response validation and client code generation. These define the exact structure, required fields, data types, and units expected for each endpoint and resource type.</p>
+
+<table>
+    <tr><th>Method</th><th>Endpoint</th><th>Description</th></tr>
+    <tr><td class="method-get">GET</td><td class="endpoint">/schemas</td><td>List all available schema categories and endpoints.</td></tr>
+    <tr><td class="method-get">GET</td><td class="endpoint">/schemas/simulations/{simulation_type_path}</td><td>Get the JSON schema for a specific simulation type's configuration structure (e.g., <code>/schemas/simulations/dynamic/component/1d-hygrothermal</code>). Defines expected fields, data types, and SI units.</td></tr>
+    <tr><td class="method-get">GET</td><td class="endpoint">/schemas/data/{asset_type}</td><td>Get the JSON schema for a specific data asset type's attributes structure (e.g., <code>/schemas/data/material</code>). Defines required properties, units, and validation rules.</td></tr>
+    <tr><td class="method-get">GET</td><td class="endpoint">/schemas/api</td><td>Get the complete OpenAPI 3.0+ specification for the entire API. Useful for generating client libraries and comprehensive validation.</td></tr>
+</table>
+
+<h2>11. Reference Data Endpoints</h2>
+
+<p>Provide access to supporting reference data, enumerations, and configuration options that help clients understand available choices and validate inputs.</p>
+
+<table>
+    <tr><th>Method</th><th>Endpoint</th><th>Description</th></tr>
+    <tr><td class="method-get">GET</td><td class="endpoint">/references/simulation-types</td><td>List all supported simulation types with descriptions, capabilities, and schema references.</td></tr>
+    <tr><td class="method-get">GET</td><td class="endpoint">/references/asset-types</td><td>List all supported data asset types with descriptions and schema references.</td></tr>
+    <tr><td class="method-get">GET</td><td class="endpoint">/references/units</td><td>List all supported units, organized by quantity type (temperature, length, energy, etc.) and unit system (SI, IP, etc.).</td></tr>
+    <tr><td class="method-get">GET</td><td class="endpoint">/references/file-formats</td><td>List supported file formats for import/export operations, including version information and capabilities.</td></tr>
+    <tr><td class="method-get">GET</td><td class="endpoint">/references/material-types</td><td>List standard material categories and types for material asset creation.</td></tr>
+    <tr><td class="method-get">GET</td><td class="endpoint">/references/boundary-conditions</td><td>List standard boundary condition types and their required parameters.</td></tr>
+    <tr><td class="method-get">GET</td><td class="endpoint">/references/{type}/{id}</td><td>Get details for a specific reference item (e.g., details of a specific unit or material property definition).</td></tr>
+</table>
+
+<h2>12. Data Models</h2>
+
+<h3>12.1 API-Specific JSON Structure (Conceptual Example)</h3>
+
+<p>Standard API request/response bodies aim for clarity and developer-friendliness, using descriptive property names, standard JSON types, and <strong>SI units</strong> by default. The specific structure depends on the resource and operation, rigorously defined by the API-specific schemas available via <code>/schemas</code>. Contrast this with potentially complex legacy structures discussed in Section 12.2.</p>
+
+<div class="json">
+// Conceptual Example: Simulation Resource (GET /simulations/{id}) - API-Specific Model
+{
+  "data": {
+    "id": "sim_abc123",
+    "type": "simulation",
+    "attributes": {
+      "name": "Example Hygrothermal Simulation (Imported from IP)",
+      "description": "1D wall assembly analysis, originally from WUFI IP file",
+      "status": "COMPLETED", // See Section 5.1 for states
+      "simulation_type": "dynamic/component/1d-hygrothermal", // Identifier
+      "createdAt": "2025-04-17T10:17:22Z", // ISO 8601 format
+      "updatedAt": "2025-04-17T11:35:00Z",
+      "startedAt": "2025-04-17T10:18:00Z", // If run
+      "completedAt": "2025-04-17T11:35:00Z", // If run & finished
+      "configuration": { // Structure defined by API-SPECIFIC schema, uses SI UNITS
+        "calculationParameters": {
+            "startDate": "2024-01-01T00:00:00Z",
+            "endDate": "2025-01-01T00:00:00Z",
+            "timeStepSeconds": 3600, // SI: seconds
+            "initializationPeriodDays": 30
+        },
+        "assembly": {
+            "layers": [ // Array of layer objects
+                { "materialAssetId": "asset_mat_concrete123", "thickness": 0.2032 }, // SI: meters (converted from e.g. 8 inches)
+                { "materialAssetId": "asset_mat_insulation456", "thickness": 0.1524 } // SI: meters (converted from e.g. 6 inches)
+            ],
+            "boundaryConditions": { // Object containing boundary condition definitions
+               "interior": { "type": "convective", "heatTransferCoefficient": 7.69, "waterVapourCoefficient": 3.8e-8 }, // SI units (converted)
+               "exterior": { "type": "climate", "climateAssetId": "asset_weather_chicago789", "windDrivenRainCoefficient": 0.7 }
+            }
+        },
+        "outputControl": { // Example grouping for output settings
+             "selectedVariables": ["temperature", "relativeHumidity"],
+             "reportingIntervalHours": 1
+        },
+        "referencedDataAssets": [
+            { "id": "asset_mat_concrete123", "type": "material" },
+            { "id": "asset_mat_insulation456", "type": "material" },
+            { "id": "asset_weather_chicago789", "type": "weather" }
+        ]
+      },
+      "control": { // Optional control parameters
+          "priority": "normal",
+          "notifications": [ { "event": "completed", "email": "user@example.com" } ]
+      },
+      "metadata": { // Optional user-defined metadata
+          "tags": ["project-beta", "exterior-wall-ip"],
+          "customFields": { "clientRef": "ClientProjectXYZ" }
+      },
+      "origin_details": { // Optional: Context about how this simulation was created
+            "imported_from_format": "wufi-pro-6",
+            "original_filename": "input_imperial.w6p",
+            "original_unit_system": "IP" // Indicates source units were IP
+      }
+    }
+  },
+  "meta": { "request_id": "req_mno789" }
+}
+</div>
+
+<h3>12.2 Handling Data Model Complexity and Legacy Formats (Hybrid Approach)</h3>
+
+<p>The Building Science SaaS platform supports a wide range of simulations, some involving highly complex and detailed input configurations derived from established desktop tools (e.g., WUFI®, Delphin, EnergyPlus via IDF) or internal calculation engines. These tools often have:</p>
+
+<ul>
+    <li><strong>Complex, nested data structures</strong> with hundreds of parameters</li>
+    <li><strong>Non-descriptive property names</strong> (e.g., <code>cH</code>, <code>tIniPer</code>) reflecting legacy formats</li>
+    <li><strong>Non-SI unit conventions</strong> (e.g., Imperial/IP units commonly used in North America)</li>
+    <li><strong>Format-specific validation rules</strong> and interdependencies between fields</li>
+</ul>
+
+<p>To balance <strong>simplicity for common use cases</strong> with <strong>flexibility for complex scenarios</strong>, the API employs a <strong>hybrid approach</strong>:</p>
+
+<h4>Approach A: API-Specific Abstracted Models (Primary)</h4>
+<ul>
+    <li><strong>When to use:</strong> Standard workflows, common simulation types, new integrations</li>
+    <li><strong>Characteristics:</strong> Clean JSON with descriptive property names, SI units, well-documented schemas</li>
+    <li><strong>Endpoints:</strong> <code>POST /simulations</code>, <code>PUT/PATCH /simulations/{id}</code>, <code>POST /data/assets</code></li>
+    <li><strong>Benefits:</strong> Easy to understand, validate, and integrate with modern tools</li>
+</ul>
+
+<h4>Approach B: Native/Expert Format Support (Secondary)</h4>
+<ul>
+    <li><strong>When to use:</strong> Importing from existing tools, preserving full detail of complex configurations, expert users</li>
+    <li><strong>Characteristics:</strong> Supports native file formats and complex JSON structures mirroring original tools</li>
+    <li><strong>Endpoints:</strong> <code>POST /simulations/import</code>, <code>GET /simulations/{id}/export</code>, <code>POST /utilities/convert/file</code></li>
+    <li><strong>Benefits:</strong> No loss of information, seamless migration from existing tools, supports all edge cases</li>
+</ul>
+
+<p>Interactions involving complex legacy formats or non-SI units are typically handled via the dedicated import mechanisms (see Section 5.5 and Section 12.2).</p>
+
+<h2>13. Workflow Examples</h2>
+
+<h3>13.1 Example Workflow: 1D Hygrothermal Simulation (Standard API Model)</h3>
+
+<p class="note">This workflow uses the standard API models, expecting SI units in requests and receiving SI units in responses. It references data assets managed via the independent asset endpoints (Section 6.2).</p>
+
+<ol>
+<li><strong>Discover Asset Type Schema (Optional):</strong>
+<pre><span class="method-get">GET</span> <span class="endpoint">/v1/schemas/data/material</span></pre>
+<i>(To understand the required structure/units for material assets if creating or modifying them).</i>
+</li>
+
+<li><strong>Find Required Material Asset (e.g., Concrete):</strong>
+<pre><span class="method-get">GET</span> <span class="endpoint">/v1/data/assets?asset_type=material&page[size]=20</span>
+Authorization: Bearer YOUR_API_KEY
+Accept: application/json</pre>
+<i>(Server searches accessible material assets. Note: Clients should implement client-side filtering to find specific materials like "Concrete BC1").</i>
+</li>
+
+<li><strong>Create New Simulation Configuration:</strong>
+<pre><span class="method-post">POST</span> <span class="endpoint">/v1/simulations</span>
+Authorization: Bearer YOUR_API_KEY
+Content-Type: application/json
+Accept: application/json
+
+{
+  "data": {
+    "type": "simulation",
+    "attributes": {
+      "name": "1D Hygrothermal Wall Analysis",
+      "simulation_type": "dynamic/component/1d-hygrothermal",
+      "configuration": {
+        // ... API-specific JSON configuration in SI units ...
+        "assembly": {
+          "layers": [
+            { "materialAssetId": "asset_mat_concrete123", "thickness": 0.2032 }
+          ]
+        }
+      }
+    }
+  }
+}</pre>
+<i>(Response: <code>201 Created</code>, body contains new simulation resource with ID <code>sim_xyz987</code> and status <code>READY</code>).</i>
+</li>
+
+<li><strong>Run the Simulation:</strong>
+<pre><span class="method-post">POST</span> <span class="endpoint">/v1/simulations/sim_xyz987/run</span>
+Authorization: Bearer YOUR_API_KEY</pre>
+<i>(Server accepts job. Response: <code>202 Accepted</code>, <code>Location: /v1/simulations/sim_xyz987/status</code>. Simulation state becomes <code>VALIDATING</code>).</i>
+</li>
+
+<li><strong>Check Status (Poll):</strong>
+<pre><span class="method-get">GET</span> <span class="endpoint">/v1/simulations/sim_xyz987/status</span>
+Authorization: Bearer YOUR_API_KEY
+Accept: application/json</pre>
+<i>(Repeat GET request. Response: <code>200 OK</code>, body shows status like <code>VALIDATING</code> → <code>QUEUED</code> → <code>RUNNING</code> → <code>POST_PROCESSING</code> → <code>COMPLETED</code> or <code>FAILED</code> if validation/run fails).</i>
+</li>
+
+<li><strong>Retrieve Results Summary (Once Completed):</strong>
+<pre><span class="method-get">GET</span> <span class="endpoint">/v1/simulations/sim_xyz987/results/summary</span>
+Authorization: Bearer YOUR_API_KEY
+Accept: application/json</pre>
+<i>(Response contains summary results in SI units).</i>
+</li>
+
+<li><strong>Retrieve Specific Timeseries Data:</strong>
+<pre><span class="method-get">GET</span> <span class="endpoint">/v1/simulations/sim_xyz987/results/timeseries?variable=temperature&layer=2&page[size]=1000&page[number]=1</span>
+Authorization: Bearer YOUR_API_KEY
+Accept: application/json</pre>
+<i>(Response contains timeseries data in SI units).</i>
+</li>
+
+<li><strong>(Optional) Convert Result Unit for Display:</strong>
+<pre><span class="method-post">POST</span> <span class="endpoint">/v1/utilities/units/convert</span>
+Authorization: Bearer YOUR_API_KEY
+Content-Type: application/json
+Accept: application/json
+
+{ 
+  "conversions": [
+    { "value": 15.5, "fromUnit": "degC", "toUnit": "degF", "quantityType": "temperature" }
+  ]
+}</pre>
+</li>
+
+<li><strong>(Optional) Link Asset to a Catalogue:</strong>
+<pre><span class="method-post">POST</span> <span class="endpoint">/v1/data/catalogues/cat_mat_user1/asset_links</span>
+Authorization: Bearer YOUR_API_KEY
+Content-Type: application/json
+Accept: application/json
+
+{ "asset_id": "asset_mat_concrete123" }</pre>
+<i>(Links the previously found/used concrete asset to the user's catalogue cat_mat_user1 for future browsing. Response: 201 Created or 200 OK).</i>
+</li>
+</ol>
+
+<h3>13.2 Polling Best Practices</h3>
+
+<p>When waiting for asynchronous operations (simulation execution, imports, file conversions), follow these polling guidelines:</p>
+
+<ol>
+    <li>Start polling the status endpoint (e.g., <code>GET /simulations/{id}/status</code>) after initiating the operation</li>
+    <li>Use reasonable polling intervals (e.g., exponential backoff, starting with 5-10 seconds, increasing cap)</li>
+    <li>The status response indicates the current state (<code>VALIDATING</code>, <code>QUEUED</code>, <code>RUNNING</code>, <code>POST_PROCESSING</code>, etc.) and may include progress percentage or informative messages</li>
+    <li>If validation (during <code>VALIDATING</code> state) fails, the state transitions to <code>FAILED</code></li>
+    <li>If validation passes, the state transitions to <code>QUEUED</code> and proceeds through the execution lifecycle</li>
+    <li>Once the status is <code>COMPLETED</code> or <code>FAILED</code>, the polling can stop</li>
+    <li>If <code>COMPLETED</code>, results become available through the results endpoints</li>
+    <li>If <code>FAILED</code>, the status response or logs endpoint should provide error details</li>
+</ol>
+
+<h3>13.3 Status Response Format (Example)</h3>
+
+<div class="json">
+// GET /simulations/{id}/status Response Body
+{
+  "data": {
+    "simulationId": "sim_abc123",
+    "status": "VALIDATING", // From defined states (Section 5.1) - e.g., checking data consistency
+    "progressPercent": null, // May not be applicable during validation
+    "message": "Performing pre-run data consistency checks...", // Optional status update
+    "estimatedCompletionTime": null, // Likely unknown during validation
+    "requestedAt": "2025-04-17T10:17:55Z", // Timestamp when /run was called
+    "lastUpdatedAt": "2025-04-17T10:17:58Z", // Timestamp of this status object's last update
+    "errors": [] // Populated only if status is FAILED (could fail during validation)
+  },
+  "meta": { "request_id": "req_pqr012" }
+}
+</div>
+
+<h3>13.4 Handling Large Results</h3>
+
+<ul>
+    <li>Endpoints returning potentially large lists of data (e.g., timeseries results via <code>GET .../results/timeseries</code>, listing assets in a large catalogue) use pagination (See Section 4.5)</li>
+    <li>Provide query parameters for filtering and selecting subsets of data (e.g., specific variables, time ranges, spatial locations) on result endpoints to minimize data transfer</li>
+    <li>For downloading very large files (e.g., full result packages via <code>GET .../results/download</code>, raw weather data assets), the API should respond with a redirect (<code>302 Found</code> or <code>307 Temporary Redirect</code>) to a temporary, secure, pre-signed URL pointing directly to cloud storage (e.g., S3, Azure Blob Storage). This offloads the large file transfer from the API server</li>
+</ul>
+
+<h2>14. Error Handling and Status Codes</h2>
+
+<h3>14.1 HTTP Status Code Usage</h3>
+
+<table>
+<tr><th>Status Code</th><th>Meaning</th><th>When Used</th></tr>
+<tr><td>200 OK</td><td>Successful request</td><td>GET, successful PUT/PATCH operations</td></tr>
+<tr><td>201 Created</td><td>Resource created successfully</td><td>POST operations creating new resources</td></tr>
+<tr><td>202 Accepted</td><td>Request accepted for processing</td><td>Asynchronous operations (run, cancel, import)</td></tr>
+<tr><td>204 No Content</td><td>Successful request with no response body</td><td>DELETE operations, some PUT/PATCH operations</td></tr>
+<tr><td>400 Bad Request</td><td>Invalid request syntax or parameters</td><td>Malformed JSON, missing required fields, invalid values</td></tr>
+<tr><td>401 Unauthorized</td><td>Authentication required or invalid</td><td>Missing or invalid API key</td></tr>
+<tr><td>403 Forbidden</td><td>Access denied</td><td>Insufficient permissions for resource</td></tr>
+<tr><td>404 Not Found</td><td>Resource not found</td><td>Invalid resource ID, deleted resources</td></tr>
+<tr><td>409 Conflict</td><td>Request conflicts with current state</td><td>Trying to run simulation not in READY state</td></tr>
+<tr><td>422 Unprocessable Entity</td><td>Valid syntax but semantic errors</td><td>Validation failures, business rule violations</td></tr>
+<tr><td>429 Too Many Requests</td><td>Rate limit exceeded</td><td>Too many requests in time window</td></tr>
+<tr><td>500 Internal Server Error</td><td>Server error</td><td>Unexpected server-side failures</td></tr>
+<tr><td>503 Service Unavailable</td><td>Service temporarily unavailable</td><td>Maintenance, overload</td></tr>
+</table>
+
+<h3>14.2 Error Response Structure</h3>
+
+<p>All error responses follow the standardized format described in Section 4.2, with the <code>errors</code> array containing one or more error objects providing detailed information about what went wrong.</p>
+
+<h3>14.3 Common Error Scenarios</h3>
+
+<h4>Validation Errors (422 Unprocessable Entity)</h4>
+
+<div class="json">
+{
+  "errors": [
+    {
+      "status": "422",
+      "code": "VALIDATION_FAILED",
+      "title": "Validation Failed",
+      "detail": "Material asset 'asset_mat_invalid123' referenced in simulation configuration does not exist or is not accessible.",
+      "source": { "pointer": "/data/attributes/configuration/assembly/layers/0/materialAssetId" }
+    }
+  ],
+  "meta": { "request_id": "req_validation_error" }
+}
+</div>
+
+<h4>State Conflict Errors (409 Conflict)</h4>
+
+<div class="json">
+{
+  "errors": [
+    {
+      "status": "409",
+      "code": "INVALID_STATE_TRANSITION",
+      "title": "Invalid State Transition",
+      "detail": "Cannot run simulation in 'RUNNING' state. Simulation must be in 'READY' or 'FAILED' state to start execution.",
+      "source": { "pointer": "/simulations/sim_abc123/status" }
+    }
+  ],
+  "meta": { "request_id": "req_state_error" }
+}
+</div>
+
+<h2>15. Security Considerations</h2>
+
+<h3>15.1 Data Protection</h3>
+
+<ul>
+    <li><strong>Encryption:</strong> All data transmitted via HTTPS/TLS. Sensitive data encrypted at rest</li>
+    <li><strong>Access Control:</strong> Resource-level permissions ensure users can only access their own data</li>
+    <li><strong>Data Retention:</strong> Configurable data retention policies for simulation results and logs</li>
+    <li><strong>Audit Trails:</strong> Comprehensive logging of data access and modifications</li>
+</ul>
+
+<h3>15.2 API Security</h3>
+
+<ul>
+    <li><strong>Authentication:</strong> Secure API key management with revocation capabilities</li>
+    <li><strong>Rate Limiting:</strong> Protection against abuse and resource exhaustion</li>
+    <li><strong>Input Validation:</strong> Rigorous validation against defined schemas</li>
+    <li><strong>Error Information:</strong> Error responses avoid leaking sensitive system information</li>
+</ul>
+
+<h3>15.3 Infrastructure Security</h3>
+
+<ul>
+    <li><strong>Network Security:</strong> API endpoints protected by firewalls and intrusion detection</li>
+    <li><strong>Dependency Management:</strong> Regular security updates for all system dependencies</li>
+    <li><strong>Monitoring:</strong> Real-time monitoring for security threats and anomalous behavior</li>
+    <li><strong>Backup and Recovery:</strong> Secure backup procedures with tested recovery processes</li>
+</ul>
+
+<h2>16. Performance and Scalability</h2>
+
+<h3>16.1 Design for Scale</h3>
+
+<ul>
+    <li><strong>Asynchronous Processing:</strong> Long-running operations (simulations, imports) handled asynchronously</li>
+    <li><strong>Pagination:</strong> Large datasets returned in manageable chunks</li>
+    <li><strong>Caching:</strong> Intelligent caching of frequently accessed data and results</li>
+    <li><strong>Load Balancing:</strong> Horizontal scaling with load-balanced API servers</li>
+</ul>
+
+<h3>16.2 Resource Management</h3>
+
+<ul>
+    <li><strong>Simulation Queue:</strong> Fair queuing system for computation-intensive operations</li>
+    <li><strong>Storage Optimization:</strong> Efficient storage and retrieval of large result datasets</li>
+    <li><strong>Memory Management:</strong> Careful handling of large file uploads and downloads</li>
+    <li><strong>Timeout Handling:</strong> Appropriate timeouts for various operation types</li>
+</ul>
+
+<h3>16.3 Monitoring and Optimization</h3>
+
+<ul>
+    <li><strong>Performance Metrics:</strong> Real-time monitoring of response times and throughput</li>
+    <li><strong>Resource Usage:</strong> Tracking of computational and storage resource utilization</li>
+    <li><strong>Optimization:</strong> Continuous optimization based on usage patterns and bottlenecks</li>
+    <li><strong>Alerting:</strong> Automated alerts for performance degradation or resource exhaustion</li>
+</ul>
+
+<h2>17. API Diagram (Conceptual)</h2>
+
+<div class="diagram">
+    <p><i>API architecture diagram</i></p>
+    <div class="mermaid-container">
+        <div class="mermaid">
+            graph LR
+                subgraph Account_Management["Account Management (/account)"]
+                    A1["User/Org Info"]
+                    A2["API Keys"] --> A1
+                    A3["Usage/Limits"] --> A1
+                end
+
+                subgraph Core_Simulations["Core: Simulations (/simulations)"]
+                    S["Simulation List"]
+                    SI["Simulation Instance /{id}"]
+                    S --> SI
+
+                    subgraph Instance_Details["Instance Details & Actions"]
+                        direction LR
+                        SI -- GET/PUT/PATCH/DELETE --> SI
+                        SI -- POST /run --> S_Status["Status Check / Poll <br> [VALIDATING -> ...]"]
+                        SI -- POST /cancel --> S_Status
+                        SI -- GET /status --> S_Status
+                        SI -- Contains --> S_Config["Configuration<br>[API Model / SI Units]"]
+                        SI -- Contains --> S_Results["Results /results/* <br>[SI Units]"]
+                        SI -- POST /import --> S_Import["Import Handler <br>[Handles Native Formats/Units]"]
+                        S_Import -- Creates/Updates --> SI
+                        SI -- GET /export --> S_Export["Export Handler <br>[Handles Native Formats/Units]"]
+                    end
+
+                    subgraph Results_Breakdown["Results Breakdown"]
+                        direction LR
+                        S_Results --> R_Summary[".../summary"]
+                        S_Results --> R_Timeseries[".../timeseries"]
+                        S_Results --> R_Reports[".../reports/{fmt}"]
+                        S_Results --> R_Download[".../download"]
+                        S_Results --> R_Logs[".../logs"]
+                    end
+                end
+
+                subgraph Data_Management["Data Management (/data)"]
+                    direction TB
+                    subgraph Assets["/data/assets"]
+                        AssetList["Asset List /assets"]
+                        AssetInstance["Asset Instance /{asset_id}"]
+                        AssetActions["Asset Actions /assets/actions/*"]
+                        AssetList -- GET / POST --> AssetInstance
+                        AssetInstance -- GET/PUT/PATCH/DELETE --> AssetInstance
+                        AssetInstance -- GET --> AssetCatalogues["Linked Catalogues /catalogues"]
+                    end
+                    subgraph Catalogues["/data/catalogues"]
+                        CatalogueList["Catalogue List /catalogues"]
+                        CatalogueInstance["Catalogue Instance /{catalogue_id}"]
+                        AssetLinks["Asset Links /{catalogue_id}/asset_links"]
+                        CatalogueList -- GET / POST --> CatalogueInstance
+                        CatalogueInstance -- GET/PATCH/DELETE --> CatalogueInstance
+                        CatalogueInstance -- Manages --> AssetLinks
+                        CatalogueInstance -- GET /assets --> AssetInstance
+                    end
+                    AssetLinks -- Links (POST/DELETE) --> AssetInstance
+                end
+
+                subgraph Supporting_Resources["Supporting Resources"]
+                    U["Utilities /utilities"]
+                    U_Unit["Unit Conversion"] --> U
+                    U_File["File Conversion"] --> U
+                    Sch["Schemas /schemas"]
+                    Ref["References /references"]
+                end
+
+                SI -.-> AssetInstance
+                S_Config -.-> AssetInstance
+                
+                classDef primaryEndpoint fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+                classDef supportEndpoint fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+                classDef actionEndpoint fill:#e8f5e8,stroke:#388e3c,stroke-width:2px
+                
+                class SI,AssetInstance primaryEndpoint
+                class U,Sch,Ref supportEndpoint
+                class S_Status,S_Import,S_Export actionEndpoint
+        </div>
+        <div class="diagram-note">
+            High-level view of API resource organization and relationships. Arrows show navigation paths and dependencies.
+        </div>
+    </div>
+</div>
+
+<h2>18. Development and Integration</h2>
+
+<h3>18.1 Getting Started</h3>
+
+<ol>
+    <li><strong>Account Setup:</strong> Create an account and generate your first API key via <code>POST /account/api-keys</code></li>
+    <li><strong>Schema Discovery:</strong> Explore available schemas via <code>GET /schemas</code> and reference data via <code>GET /references</code></li>
+    <li><strong>Test Integration:</strong> Start with simple operations like listing simulations (<code>GET /simulations</code>) or creating basic assets</li>
+    <li><strong>Build Workflows:</strong> Implement full workflows using the patterns shown in Section 13</li>
+</ol>
+
+<h3>18.2 Client Libraries and SDKs</h3>
+
+<p>The API provides comprehensive OpenAPI 3.0+ specifications via <code>GET /schemas/api</code> that can be used to generate client libraries for various programming languages:</p>
+
+<ul>
+    <li><strong>JavaScript/TypeScript:</strong> Generated clients for web and Node.js applications</li>
+    <li><strong>Python:</strong> Full-featured SDK with examples and utilities</li>
+    <li><strong>C#/.NET:</strong> NuGet package for .NET applications</li>
+    <li><strong>Java:</strong> Maven/Gradle compatible library</li>
+    <li><strong>Go:</strong> Native Go module</li>
+</ul>
+
+<h3>18.3 Testing and Validation</h3>
+
+<ul>
+    <li><strong>Sandbox Environment:</strong> Complete testing environment with realistic data</li>
+    <li><strong>Schema Validation:</strong> Client-side validation using provided JSON schemas</li>
+    <li><strong>Mock Data:</strong> Sample data and configurations for testing</li>
+    <li><strong>Unit Testing:</strong> Integration test examples and utilities</li>
+</ul>
+
+<h2>19. Migration and Versioning</h2>
+
+<h3>19.1 Version Lifecycle</h3>
+
+<ul>
+    <li><strong>Version Support:</strong> Major versions supported for minimum 24 months after successor release</li>
+    <li><strong>Deprecation Notice:</strong> 6-month advance notice for breaking changes</li>
+    <li><strong>Migration Path:</strong> Clear migration guides and tooling for version transitions</li>
+    <li><strong>Backward Compatibility:</strong> Additive changes within major versions maintain compatibility</li>
+</ul>
+
+<h3>19.2 Import/Export Compatibility</h3>
+
+<ul>
+    <li><strong>Legacy Tool Support:</strong> Ongoing support for importing from major building science tools</li>
+    <li><strong>Format Evolution:</strong> Graceful handling of format version changes</li>
+    <li><strong>Data Preservation:</strong> Mechanisms to preserve data fidelity across migrations</li>
+    <li><strong>Export Options:</strong> Multiple export formats to prevent vendor lock-in</li>
+</ul>
+
+<h2>20. Support and Documentation</h2>
+
+<h3>20.1 Documentation Resources</h3>
+
+<ul>
+    <li><strong>API Reference:</strong> Complete endpoint documentation with examples</li>
+    <li><strong>Getting Started Guide:</strong> Step-by-step tutorial for common workflows</li>
+    <li><strong>Integration Examples:</strong> Sample applications and code snippets</li>
+    <li><strong>Troubleshooting Guide:</strong> Common issues and their solutions</li>
+</ul>
+
+<h3>20.2 Developer Support</h3>
+
+<ul>
+    <li><strong>Developer Portal:</strong> Centralized resource for documentation and tools</li>
+    <li><strong>Community Forum:</strong> Peer support and best practice sharing</li>
+    <li><strong>Technical Support:</strong> Direct access to API engineering team</li>
+    <li><strong>Status Page:</strong> Real-time API status and maintenance notifications</li>
+</ul>
+
+<h3>20.3 Feedback and Improvement</h3>
+
+<ul>
+    <li><strong>Feature Requests:</strong> Structured process for requesting new functionality</li>
+    <li><strong>Bug Reports:</strong> Clear procedures for reporting and tracking issues</li>
+    <li><strong>API Evolution:</strong> Regular updates based on user feedback and industry trends</li>
+    <li><strong>Beta Programs:</strong> Early access to new features and versions</li>
+</ul>
+
+</body>
+</html>
