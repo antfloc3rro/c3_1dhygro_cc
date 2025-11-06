@@ -69,7 +69,16 @@ const initialSimulationState: SimulationState = {
 
 const initialProjectState: ProjectState = {
   currentProject: null,
-  currentCaseId: null,
+  currentCaseId: 'case1',
+  cases: [
+    {
+      id: 'case1',
+      name: 'Base Case',
+      status: 'draft',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    },
+  ],
   projectInfo: {
     name: 'Untitled Project',
     clientName: '',
@@ -298,9 +307,38 @@ export const useAppStore = create<AppState>()(
           // Project actions
           setProject: (project) => set((state) => { state.project.currentProject = project }),
           setCase: (caseId) => set((state) => { state.project.currentCaseId = caseId }),
+          addCase: (caseData) => set((state) => {
+            const newCase = {
+              id: `case_${Date.now()}`,
+              name: caseData.name,
+              status: caseData.status || 'draft' as const,
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+            }
+            state.project.cases.push(newCase)
+            state.project.currentCaseId = newCase.id
+          }),
+          updateCase: (caseId, updates) => set((state) => {
+            const caseIndex = state.project.cases.findIndex(c => c.id === caseId)
+            if (caseIndex !== -1) {
+              Object.assign(state.project.cases[caseIndex], updates)
+              state.project.cases[caseIndex].updatedAt = new Date().toISOString()
+            }
+          }),
           duplicateCase: (caseId) => set((state) => {
-            // TODO: Implement case duplication logic
-            console.log('Duplicate case:', caseId)
+            const originalCase = state.project.cases.find(c => c.id === caseId)
+            if (originalCase) {
+              const newCase = {
+                ...originalCase,
+                id: `case_${Date.now()}`,
+                name: `${originalCase.name} (Copy)`,
+                status: 'draft' as const,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+              }
+              state.project.cases.push(newCase)
+              state.project.currentCaseId = newCase.id
+            }
           }),
 
           // Project settings actions

@@ -72,10 +72,20 @@ export interface SimulationState {
   endTime: Date | null
 }
 
+// Case State (simplified version for store)
+export interface StoreCase {
+  id: string
+  name: string
+  status: 'draft' | 'ready' | 'running' | 'completed' | 'error'
+  createdAt: string
+  updatedAt: string
+}
+
 // Project State
 export interface ProjectState {
   currentProject: Project | null
   currentCaseId: string | null
+  cases: StoreCase[]
   // Project settings
   projectInfo: {
     name: string
@@ -179,6 +189,8 @@ export interface AppActions {
   // Project actions
   setProject: (project: Project) => void
   setCase: (caseId: string) => void
+  addCase: (caseData: { name: string; status?: StoreCase['status'] }) => void
+  updateCase: (caseId: string, updates: Partial<StoreCase>) => void
   duplicateCase: (caseId: string) => void
   setClimate: (climate: ClimateState['climate']) => void
 

@@ -46,18 +46,12 @@ export function EnhancedHeader() {
 
   const projectInfo = useAppStore((state) => state.project.projectInfo)
   const currentCaseId = useAppStore((state) => state.project.currentCaseId)
+  const cases = useAppStore((state) => state.project.cases)
   const simulationStatus = useAppStore((state) => state.simulation.status)
   const simulationProgress = useAppStore((state) => state.simulation.progress)
-  const { canUndo, canRedo, undo, redo, openModal, setSimulationStatus, updateProjectInfo } = useAppStore(
+  const { canUndo, canRedo, undo, redo, openModal, setSimulationStatus, updateProjectInfo, setCase, duplicateCase } = useAppStore(
     (state) => state.actions
   )
-
-  // Mock cases data (would come from store in real app)
-  const cases = [
-    { id: 'case1', name: 'Base Case', status: 'ready' as const },
-    { id: 'case2', name: 'With Insulation', status: 'draft' as const },
-    { id: 'case3', name: 'Optimized', status: 'completed' as const },
-  ]
 
   const selectedCase = cases.find((c) => c.id === currentCaseId) || cases[0]
 
@@ -190,7 +184,7 @@ export function EnhancedHeader() {
                           'w-full px-4 py-3 text-left transition-colors',
                           active && 'bg-neutral-100'
                         )}
-                        onClick={() => console.log('Select case:', caseItem.id)}
+                        onClick={() => setCase(caseItem.id)}
                       >
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
@@ -231,7 +225,7 @@ export function EnhancedHeader() {
                   variant="primary"
                   size="small"
                   className="w-full"
-                  onClick={() => console.log('Duplicate case')}
+                  onClick={() => selectedCase && duplicateCase(selectedCase.id)}
                 >
                   + Duplicate Current Case
                 </Button>
