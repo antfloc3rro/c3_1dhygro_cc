@@ -1,0 +1,126 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Base styles */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-neutral-50 text-neutral-900 font-sans;
+  }
+
+  button {
+    @apply transition-colors duration-150;
+  }
+
+  input,
+  select,
+  textarea {
+    @apply transition-colors duration-150;
+  }
+}
+
+/* Component styles */
+@layer components {
+  /* Buttons */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-md font-medium transition-all duration-150 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-primary {
+    @apply bg-teal-600 text-white hover:bg-teal-700 active:bg-teal-800;
+  }
+
+  .btn-secondary {
+    @apply bg-neutral-200 text-neutral-900 hover:bg-neutral-300 active:bg-neutral-400;
+  }
+
+  .btn-ghost {
+    @apply bg-transparent text-neutral-700 hover:bg-neutral-100 active:bg-neutral-200;
+  }
+
+  .btn-small {
+    @apply px-3 py-1 text-sm;
+  }
+
+  /* Inputs */
+  .input {
+    @apply px-3 py-2 border border-neutral-300 rounded-md bg-white text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all;
+  }
+
+  .input-error {
+    @apply border-error focus:ring-error;
+  }
+
+  /* Cards */
+  .card {
+    @apply bg-white rounded-lg border border-neutral-200 p-4 shadow-sm;
+  }
+
+  .card-interactive {
+    @apply cursor-pointer hover:shadow-md transition-shadow duration-150 hover:border-neutral-300;
+  }
+
+  /* Text styles */
+  .text-muted {
+    @apply text-neutral-500;
+  }
+
+  .text-disabled {
+    @apply text-neutral-400;
+  }
+
+  /* Scrollbar styling */
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(148, 163, 184, 0.5) transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: rgba(148, 163, 184, 0.5);
+    border-radius: 3px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(148, 163, 184, 0.7);
+  }
+
+  /* Focus ring */
+  .focus-ring {
+    @apply focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2;
+  }
+
+  /* Divider */
+  .divider {
+    @apply border-t border-neutral-200;
+  }
+}
+
+/* Animations */
+@layer utilities {
+  .animate-pulse-soft {
+    animation: pulse-soft 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  @keyframes pulse-soft {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.8;
+    }
+  }
+}
