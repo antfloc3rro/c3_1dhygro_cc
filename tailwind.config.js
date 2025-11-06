@@ -6,21 +6,32 @@ export default {
   ],
   theme: {
     extend: {
+      // C3RRO Design System Colors
       colors: {
-        // Primary: Teal (brand color)
-        teal: {
-          50: '#f0fdfa',
-          100: '#ccfbf1',
-          200: '#99f6e4',
-          300: '#5eead4',
-          400: '#2dd4bf',
-          500: '#14b8a6',
-          600: '#0d9488',
-          700: '#0f766e',
-          800: '#134e4a',
-          900: '#0f2f2f',
-        },
-        // Neutral: Cool gray
+        // Primary colors
+        text: '#33302F',
+        greydark: '#5E5A58',
+        grey: '#BDB2AA',
+        greylight: '#D9D8CD',
+        bluegreen: '#4AB79F', // Primary action color
+        blue: '#4597BF',
+        bluedark: '#407188',
+        bluelight: '#93D2E1',
+
+        // Secondary colors
+        red: '#C04343',
+        orange: '#E18E2A',
+        yellow: '#F8C36E',
+        yellowlight: '#FEF4DC',
+
+        // Extended colors
+        greendark: '#205959',
+        green: '#3E7263',
+        greenlight: '#89A767',
+        yellowgreen: '#B1B52E',
+        white: '#FFFFFF',
+
+        // Keep neutral palette for backward compatibility
         neutral: {
           50: '#f9fafb',
           100: '#f3f4f6',
@@ -33,13 +44,22 @@ export default {
           800: '#1f2937',
           900: '#111827',
         },
-        // Status colors
-        success: '#10b981',
-        warning: '#f59e0b',
-        error: '#ef4444',
-        info: '#3b82f6',
       },
+      // Typography (Jost for headings, Lato for body)
+      fontFamily: {
+        sans: ['Lato', 'system-ui', 'sans-serif'],
+        heading: ['Jost', 'system-ui', 'sans-serif'],
+        mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace'],
+      },
+      // Spacing system (xs: 4px, sm: 8px, md: 16px, lg: 24px, xl: 32px, 2xl: 48px)
       spacing: {
+        'xs': '0.25rem',  // 4px
+        'sm': '0.5rem',   // 8px
+        'md': '1rem',     // 16px
+        'lg': '1.5rem',   // 24px
+        'xl': '2rem',     // 32px
+        '2xl': '3rem',    // 48px
+        // Keep old names for backward compatibility
         'gutter': '8px',
         'section': '16px',
         'panel': '24px',
@@ -55,19 +75,20 @@ export default {
         'h2': ['20px', { lineHeight: '32px', fontWeight: '600' }],
         'h1': ['24px', { lineHeight: '36px', fontWeight: '700' }],
       },
+      // Shadows from design system
       boxShadow: {
-        'sm': '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
-        'md': '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-        'lg': '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
-        'xl': '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
-        'focus': '0 0 0 3px rgba(20, 184, 166, 0.1), 0 0 0 2px rgba(20, 184, 166, 1)',
+        'sm': '0 1px 2px 0 rgb(0 0 0 / 0.05)',
+        'md': '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
+        'lg': '0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)',
+        'xl': '0 20px 25px -5px rgb(0 0 0 / 0.1)',
+        'focus': '0 0 0 3px rgba(74, 183, 159, 0.1), 0 0 0 2px rgba(74, 183, 159, 1)',
       },
+      // Border radius from design system
       borderRadius: {
-        'xs': '2px',
-        'sm': '4px',
-        'md': '6px',
-        'lg': '8px',
-        'xl': '12px',
+        'sm': '0.125rem',  // 2px
+        'md': '0.375rem',  // 6px
+        'lg': '0.5rem',    // 8px
+        'xl': '0.75rem',   // 12px
       },
       animation: {
         'fade-in': 'fadeIn 200ms ease-in-out',
