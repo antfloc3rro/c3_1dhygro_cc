@@ -51,7 +51,7 @@ export function LeftPanel() {
     : 'No climate selected'
 
   return (
-    <div className="w-72 bg-white border-r border-neutral-200 overflow-y-auto">
+    <div className="w-72 min-w-[240px] bg-white border-r border-neutral-200 overflow-y-auto">
       {/* Section 1: Project Info */}
       <Collapsible
         title="Project"

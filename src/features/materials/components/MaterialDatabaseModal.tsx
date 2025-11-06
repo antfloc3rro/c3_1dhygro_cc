@@ -126,7 +126,7 @@ export function MaterialDatabaseModal({
         />
 
         {/* 3-Column Layout */}
-        <div className="grid grid-cols-3 gap-md h-[500px]">
+        <div className="grid grid-cols-3 gap-md h-[50vh] max-h-[600px]">
           {/* Categories Column */}
           <div className="flex flex-col border border-greylight rounded">
             <div className="px-md py-sm border-b border-greylight bg-greylight/5 font-medium text-sm">

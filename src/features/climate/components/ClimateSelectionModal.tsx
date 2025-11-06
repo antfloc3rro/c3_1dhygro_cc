@@ -164,7 +164,7 @@ export function ClimateSelectionModal({
               leftIcon={Search}
             />
 
-            <div className="border border-greylight rounded max-h-[400px] overflow-auto">
+            <div className="border border-greylight rounded max-h-[40vh] overflow-auto">
               {filteredPresets.length === 0 ? (
                 <div className="flex items-center justify-center h-32 text-greydark text-sm">
                   No presets found
@@ -252,7 +252,7 @@ export function ClimateSelectionModal({
             </div>
 
             {/* Mock location results */}
-            <div className="border border-greylight rounded max-h-[300px] overflow-auto">
+            <div className="border border-greylight rounded max-h-[30vh] overflow-auto">
               <div className="flex items-center justify-center h-32 text-greydark text-sm">
                 Enter a location to search
               </div>

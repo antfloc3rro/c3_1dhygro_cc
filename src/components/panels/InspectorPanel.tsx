@@ -40,7 +40,7 @@ export function InspectorPanel() {
   const selectedMonitor = monitors.find((m) => m.id === selectedMonitorId)
 
   return (
-    <div className="w-80 bg-white border-l border-neutral-200 overflow-y-auto p-4">
+    <div className="w-80 min-w-[280px] bg-white border-l border-neutral-200 overflow-y-auto p-4">
       {/* When Layer Selected */}
       {selectedLayer && (
         <div className="space-y-4">
