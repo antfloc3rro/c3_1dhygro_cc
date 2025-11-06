@@ -180,6 +180,14 @@ export interface AppActions {
   setProject: (project: Project) => void
   setCase: (caseId: string) => void
   duplicateCase: (caseId: string) => void
+  setClimate: (climate: ClimateState['climate']) => void
+
+  // Project settings actions
+  updateProjectInfo: (updates: Partial<ProjectState['projectInfo']>) => void
+  updateOrientation: (updates: Partial<ProjectState['orientation']>) => void
+  updateCalculationPeriod: (updates: Partial<ProjectState['calculationPeriod']>) => void
+  updateAdvancedSettings: (updates: Partial<ProjectState['advancedSettings']>) => void
+  updateDisplaySettings: (updates: Partial<ProjectState['displaySettings']>) => void
 
   // History actions
   undo: () => void
