@@ -53,20 +53,12 @@ export function useAutoSave(enabled: boolean = true, debounceMs: number = 1000) 
       // await saveToAPI(saveData);
 
       // Show success toast
-      showToast({
-        type: 'success',
-        message: 'Project saved',
-        duration: 2000,
-      });
+      showToast('success', 'Project saved', undefined, 2000);
 
       console.log('[AutoSave] Project saved at', new Date().toISOString());
     } catch (error) {
       console.error('[AutoSave] Save failed:', error);
-      showToast({
-        type: 'error',
-        message: 'Failed to save project',
-        duration: 4000,
-      });
+      showToast('error', 'Failed to save project', undefined, 4000);
     } finally {
       isSavingRef.current = false;
     }
@@ -143,11 +135,12 @@ export function useRestoreAutoSave() {
         ? Math.round((Date.now() - savedAt.getTime()) / 1000 / 60)
         : null;
 
-      showToast({
-        type: 'info',
-        message: `Project restored from ${timeAgo ? `${timeAgo} minutes ago` : 'auto-save'}`,
-        duration: 3000,
-      });
+      showToast(
+        'info',
+        'Project restored',
+        `Restored from ${timeAgo ? `${timeAgo} minutes ago` : 'auto-save'}`,
+        3000
+      );
 
       console.log('[AutoSave] Project restored from auto-save');
     } catch (error) {
