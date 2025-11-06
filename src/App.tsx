@@ -1,15 +1,21 @@
 import React from 'react'
-import { useUIState } from '@hooks/index'
-import { MainLayout } from '@components/layout/MainLayout'
+import { ToastProvider } from '@/components/ui/Toast'
+import { MainLayout } from '@/components/layout/MainLayout'
 import './index.css'
 
+/**
+ * App component - root of the WUFI Cloud application
+ *
+ * Wraps the application with:
+ * - ToastProvider for notifications
+ * - QueryClientProvider (in main.tsx)
+ * - MainLayout for the main UI
+ */
 export function App() {
-  const ui = useUIState()
-
   return (
-    <div className="h-screen w-screen overflow-hidden bg-neutral-50">
-      <MainLayout ui={ui} />
-    </div>
+    <ToastProvider>
+      <MainLayout />
+    </ToastProvider>
   )
 }
 
