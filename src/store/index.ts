@@ -70,6 +70,30 @@ const initialSimulationState: SimulationState = {
 const initialProjectState: ProjectState = {
   currentProject: null,
   currentCaseId: null,
+  projectInfo: {
+    name: 'Untitled Project',
+    clientName: '',
+    projectNumber: '',
+    description: '',
+    createdDate: new Date().toISOString(),
+  },
+  orientation: {
+    direction: 'north',
+    inclination: 90,
+  },
+  calculationPeriod: {
+    startDate: '2024-01-01',
+    duration: '1year',
+    timeStep: 'auto',
+  },
+  advancedSettings: {
+    increasedAccuracy: false,
+    adaptiveTimeStep: true,
+    gridDiscretization: 'auto2',
+  },
+  displaySettings: {
+    unitSystem: 'si',
+  },
 }
 
 const initialHistoryState: HistoryState = {
@@ -277,6 +301,23 @@ export const useAppStore = create<AppState>()(
           duplicateCase: (caseId) => set((state) => {
             // TODO: Implement case duplication logic
             console.log('Duplicate case:', caseId)
+          }),
+
+          // Project settings actions
+          updateProjectInfo: (updates) => set((state) => {
+            Object.assign(state.project.projectInfo, updates)
+          }),
+          updateOrientation: (updates) => set((state) => {
+            Object.assign(state.project.orientation, updates)
+          }),
+          updateCalculationPeriod: (updates) => set((state) => {
+            Object.assign(state.project.calculationPeriod, updates)
+          }),
+          updateAdvancedSettings: (updates) => set((state) => {
+            Object.assign(state.project.advancedSettings, updates)
+          }),
+          updateDisplaySettings: (updates) => set((state) => {
+            Object.assign(state.project.displaySettings, updates)
           }),
 
           // History actions

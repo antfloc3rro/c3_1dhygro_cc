@@ -76,6 +76,31 @@ export interface SimulationState {
 export interface ProjectState {
   currentProject: Project | null
   currentCaseId: string | null
+  // Project settings
+  projectInfo: {
+    name: string
+    clientName: string
+    projectNumber: string
+    description: string
+    createdDate: string
+  }
+  orientation: {
+    direction: string
+    inclination: number
+  }
+  calculationPeriod: {
+    startDate: string
+    duration: string
+    timeStep: string
+  }
+  advancedSettings: {
+    increasedAccuracy: boolean
+    adaptiveTimeStep: boolean
+    gridDiscretization: string
+  }
+  displaySettings: {
+    unitSystem: 'si' | 'imperial'
+  }
 }
 
 // History State (Undo/Redo)

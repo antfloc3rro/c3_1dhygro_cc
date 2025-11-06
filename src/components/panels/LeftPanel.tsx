@@ -27,7 +27,20 @@ import { useAppStore } from '@/store/index'
  */
 export function LeftPanel() {
   const expandedSections = useAppStore((state) => state.ui.expandedSections)
-  const { toggleSection, openModal } = useAppStore((state) => state.actions)
+  const projectInfo = useAppStore((state) => state.project.projectInfo)
+  const orientation = useAppStore((state) => state.project.orientation)
+  const calculationPeriod = useAppStore((state) => state.project.calculationPeriod)
+  const advancedSettings = useAppStore((state) => state.project.advancedSettings)
+  const displaySettings = useAppStore((state) => state.project.displaySettings)
+  const {
+    toggleSection,
+    openModal,
+    updateProjectInfo,
+    updateOrientation,
+    updateCalculationPeriod,
+    updateAdvancedSettings,
+    updateDisplaySettings,
+  } = useAppStore((state) => state.actions)
 
   return (
     <div className="w-72 bg-white border-r border-neutral-200 overflow-y-auto">
@@ -35,7 +48,7 @@ export function LeftPanel() {
       <Collapsible
         title="Project"
         icon={Folder}
-        summary="Untitled Project"
+        summary={projectInfo.name}
         expanded={expandedSections.component}
         onToggle={() => toggleSection('component')}
       >
@@ -43,10 +56,21 @@ export function LeftPanel() {
           <Input
             label="Project Name"
             placeholder="Enter project name"
-            defaultValue="Untitled Project"
+            value={projectInfo.name}
+            onChange={(e) => updateProjectInfo({ name: e.target.value })}
           />
-          <Input label="Client Name" placeholder="Client name (optional)" />
-          <Input label="Project Number" placeholder="Project # (optional)" />
+          <Input
+            label="Client Name"
+            placeholder="Client name (optional)"
+            value={projectInfo.clientName}
+            onChange={(e) => updateProjectInfo({ clientName: e.target.value })}
+          />
+          <Input
+            label="Project Number"
+            placeholder="Project # (optional)"
+            value={projectInfo.projectNumber}
+            onChange={(e) => updateProjectInfo({ projectNumber: e.target.value })}
+          />
           <div>
             <label className="block text-xs font-medium mb-1" style={{ color: '#5E5A58' }}>
               Description
@@ -55,11 +79,13 @@ export function LeftPanel() {
               className="w-full px-3 py-2 text-sm border border-neutral-300 rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-bluegreen"
               rows={3}
               placeholder="Project description (optional)"
+              value={projectInfo.description}
+              onChange={(e) => updateProjectInfo({ description: e.target.value })}
               style={{ color: '#33302F' }}
             />
           </div>
           <p className="text-xs" style={{ color: '#5E5A58' }}>
-            Created: {new Date().toLocaleDateString()}
+            Created: {new Date(projectInfo.createdDate).toLocaleDateString()}
           </p>
         </div>
       </Collapsible>
@@ -68,15 +94,15 @@ export function LeftPanel() {
       <Collapsible
         title="Orientation"
         icon={Compass}
-        summary="North, 90°"
+        summary={`${directionOptions.find(o => o.value === orientation.direction)?.label || 'North'}, ${orientation.inclination}°`}
         expanded={expandedSections.orientation}
         onToggle={() => toggleSection('orientation')}
       >
         <div className="space-y-3">
           <Select
             label="Direction"
-            value="north"
-            onChange={(value) => console.log('Direction:', value)}
+            value={orientation.direction}
+            onChange={(value) => updateOrientation({ direction: value })}
             options={directionOptions}
           />
 
@@ -92,8 +118,8 @@ export function LeftPanel() {
 
           <NumberInput
             label="Inclination [°]"
-            value={90}
-            onChange={(value) => console.log('Inclination:', value)}
+            value={orientation.inclination}
+            onChange={(value) => updateOrientation({ inclination: value })}
             min={0}
             max={180}
             decimals={1}
@@ -162,7 +188,7 @@ export function LeftPanel() {
       <Collapsible
         title="Calculation Period"
         icon={Calendar}
-        summary="Jan 1, 2024 - 1 year"
+        summary={`${new Date(calculationPeriod.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} - ${durationOptions.find(o => o.value === calculationPeriod.duration)?.label || '1 year'}`}
         expanded={expandedSections.control}
         onToggle={() => toggleSection('control')}
       >
@@ -174,22 +200,23 @@ export function LeftPanel() {
             <input
               type="date"
               className="w-full px-3 py-2 text-sm border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-bluegreen"
-              defaultValue="2024-01-01"
+              value={calculationPeriod.startDate}
+              onChange={(e) => updateCalculationPeriod({ startDate: e.target.value })}
               style={{ color: '#33302F' }}
             />
           </div>
 
           <Select
             label="Duration"
-            value="1year"
-            onChange={(value) => console.log('Duration:', value)}
+            value={calculationPeriod.duration}
+            onChange={(value) => updateCalculationPeriod({ duration: value })}
             options={durationOptions}
           />
 
           <Select
             label="Time Step"
-            value="auto"
-            onChange={(value) => console.log('Time Step:', value)}
+            value={calculationPeriod.timeStep}
+            onChange={(value) => updateCalculationPeriod({ timeStep: value })}
             options={timeStepOptions}
             helperText="Smaller time steps increase accuracy but slow simulation"
           />
@@ -200,7 +227,7 @@ export function LeftPanel() {
       <Collapsible
         title="Advanced"
         icon={Settings}
-        summary="Standard accuracy"
+        summary={advancedSettings.increasedAccuracy ? "Increased accuracy" : "Standard accuracy"}
         expanded={expandedSections.surfaces}
         onToggle={() => toggleSection('surfaces')}
       >
@@ -208,6 +235,8 @@ export function LeftPanel() {
           <label className="flex items-start gap-2 cursor-pointer">
             <input
               type="checkbox"
+              checked={advancedSettings.increasedAccuracy}
+              onChange={(e) => updateAdvancedSettings({ increasedAccuracy: e.target.checked })}
               className="mt-0.5 w-[18px] h-[18px] rounded border-neutral-300 text-bluegreen focus:ring-2 focus:ring-bluegreen"
               style={{ accentColor: '#4AB79F' }}
             />
@@ -227,7 +256,8 @@ export function LeftPanel() {
           <label className="flex items-start gap-2 cursor-pointer">
             <input
               type="checkbox"
-              defaultChecked
+              checked={advancedSettings.adaptiveTimeStep}
+              onChange={(e) => updateAdvancedSettings({ adaptiveTimeStep: e.target.checked })}
               className="mt-0.5 w-[18px] h-[18px] rounded border-neutral-300 text-bluegreen focus:ring-2 focus:ring-bluegreen"
               style={{ accentColor: '#4AB79F' }}
             />
@@ -243,8 +273,8 @@ export function LeftPanel() {
 
           <Select
             label="Grid Discretization"
-            value="auto2"
-            onChange={(value) => console.log('Grid:', value)}
+            value={advancedSettings.gridDiscretization}
+            onChange={(value) => updateAdvancedSettings({ gridDiscretization: value })}
             options={gridDiscretizationOptions}
           />
         </div>
@@ -254,7 +284,7 @@ export function LeftPanel() {
       <Collapsible
         title="Display"
         icon={Eye}
-        summary="SI units, Light theme"
+        summary={`${displaySettings.unitSystem === 'si' ? 'SI' : 'Imperial'} units`}
         defaultExpanded={false}
       >
         <div className="space-y-3">
@@ -268,7 +298,8 @@ export function LeftPanel() {
                   type="radio"
                   name="units"
                   value="si"
-                  defaultChecked
+                  checked={displaySettings.unitSystem === 'si'}
+                  onChange={() => updateDisplaySettings({ unitSystem: 'si' })}
                   className="w-4 h-4 text-bluegreen focus:ring-2 focus:ring-bluegreen"
                   style={{ accentColor: '#4AB79F' }}
                 />
@@ -281,6 +312,8 @@ export function LeftPanel() {
                   type="radio"
                   name="units"
                   value="imperial"
+                  checked={displaySettings.unitSystem === 'imperial'}
+                  onChange={() => updateDisplaySettings({ unitSystem: 'imperial' })}
                   className="w-4 h-4 text-bluegreen focus:ring-2 focus:ring-bluegreen"
                   style={{ accentColor: '#4AB79F' }}
                 />
