@@ -1,6 +1,6 @@
 import React, { forwardRef } from 'react'
 import { cn } from '@/utils/index'
-import { Check, AlertCircle, AlertTriangle } from 'lucide-react'
+import { Check, AlertCircle, AlertTriangle, LucideIcon } from 'lucide-react'
 
 export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string
@@ -8,8 +8,8 @@ export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> 
   warning?: string
   success?: boolean
   helperText?: string
-  leftIcon?: React.ReactNode
-  rightIcon?: React.ReactNode
+  leftIcon?: LucideIcon | React.ReactNode
+  rightIcon?: LucideIcon | React.ReactNode
 }
 
 /**
@@ -57,7 +57,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
         <div className="relative">
           {leftIcon && (
             <div className="absolute left-3 top-1/2 -translate-y-1/2 text-greydark">
-              {leftIcon}
+              {typeof leftIcon === 'function' ? React.createElement(leftIcon, { className: 'w-[18px] h-[18px]' }) : leftIcon}
             </div>
           )}
 
@@ -102,7 +102,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
               {hasSuccess ? (
                 <Check className="w-[18px] h-[18px]" style={{ color: '#3E7263' }} />
               ) : (
-                rightIcon
+                typeof rightIcon === 'function' ? React.createElement(rightIcon, { className: 'w-[18px] h-[18px]' }) : rightIcon
               )}
             </div>
           )}
