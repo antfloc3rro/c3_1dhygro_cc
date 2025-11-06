@@ -25,6 +25,25 @@ export interface UIState {
     control: boolean
   }
 
+  // Modal preferences (persisted state)
+  modalPreferences: {
+    materialDatabase: {
+      selectedCategory: string | null
+      selectedSubcategory: string | null
+      searchQuery: string
+    }
+    climateSelection: {
+      activeTab: string
+      searchQuery: string
+      selectedLocation: string | null
+      uploadedFileName: string | null
+    }
+  }
+
+  // Layout preferences
+  mainLayoutSelectedTab: number
+  statusBarExpanded: boolean
+
   // Theme (future)
   theme: 'light' | 'dark'
 }
@@ -153,6 +172,14 @@ export interface AppActions {
   toggleLeftPanel: () => void
   toggleRightPanel: () => void
   toggleSection: (section: keyof UIState['expandedSections']) => void
+
+  // Modal preference actions
+  setMaterialDatabasePreferences: (updates: Partial<UIState['modalPreferences']['materialDatabase']>) => void
+  setClimateSelectionPreferences: (updates: Partial<UIState['modalPreferences']['climateSelection']>) => void
+
+  // Layout preference actions
+  setMainLayoutTab: (tabIndex: number) => void
+  setStatusBarExpanded: (expanded: boolean) => void
 
   // Assembly actions
   addLayer: (layer: Layer) => void

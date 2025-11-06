@@ -25,7 +25,10 @@ import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
  */
 export function MainLayout() {
   const [gridVisible, setGridVisible] = useState(false)
-  const [selectedTab, setSelectedTab] = useState(0)
+
+  // Use store for persistent tab selection
+  const selectedTab = useAppStore((state) => state.ui.mainLayoutSelectedTab)
+  const setSelectedTab = useAppStore((state) => state.actions.setMainLayoutTab)
 
   // Auto-save functionality with 1-second debounce
   const { saveNow } = useAutoSave(true, 1000)

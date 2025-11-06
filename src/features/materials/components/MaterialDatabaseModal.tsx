@@ -6,6 +6,7 @@ import { Button } from '../../../components/ui/Button';
 import { Search, Check } from 'lucide-react';
 import { Material, MaterialCategory, MaterialSubcategory } from '../types';
 import { cn } from '../../../lib/utils';
+import { useAppStore } from '../../../store/index';
 
 interface MaterialDatabaseModalProps {
   isOpen: boolean;
@@ -24,10 +25,20 @@ export function MaterialDatabaseModal({
   subcategories,
   materials,
 }: MaterialDatabaseModalProps) {
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null);
+  // Use store for persistent modal state
+  const modalPrefs = useAppStore((state) => state.ui.modalPreferences.materialDatabase);
+  const setModalPrefs = useAppStore((state) => state.actions.setMaterialDatabasePreferences);
+
+  const selectedCategory = modalPrefs.selectedCategory;
+  const selectedSubcategory = modalPrefs.selectedSubcategory;
+  const searchQuery = modalPrefs.searchQuery;
+
+  const setSelectedCategory = (category: string | null) => setModalPrefs({ selectedCategory: category });
+  const setSelectedSubcategory = (subcategory: string | null) => setModalPrefs({ selectedSubcategory: subcategory });
+  const setSearchQuery = (query: string) => setModalPrefs({ searchQuery: query });
+
+  // Local state for current selection (not persisted)
   const [selectedMaterial, setSelectedMaterial] = useState<Material | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
 
   // Filter subcategories by selected category
   const filteredSubcategories = useMemo(() => {

@@ -1,7 +1,8 @@
-import React, { useState } from 'react'
+import React from 'react'
 import { CheckCircle, AlertCircle, AlertTriangle, ChevronDown } from 'lucide-react'
 import { cn } from '@/utils/index'
 import { Spinner } from '@/components/ui/Spinner'
+import { useAppStore } from '@/store/index'
 
 interface Issue {
   id: string
@@ -55,7 +56,9 @@ export function StatusBar({
   issues = [],
   progress,
 }: StatusBarProps) {
-  const [isExpanded, setIsExpanded] = useState(false)
+  // Use store for persistent expanded state
+  const isExpanded = useAppStore((state) => state.ui.statusBarExpanded)
+  const setIsExpanded = useAppStore((state) => state.actions.setStatusBarExpanded)
 
   const statusConfig = {
     ready: {

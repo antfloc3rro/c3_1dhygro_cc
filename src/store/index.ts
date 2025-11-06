@@ -21,6 +21,21 @@ const initialUIState: UIState = {
     climate: false,
     control: false,
   },
+  modalPreferences: {
+    materialDatabase: {
+      selectedCategory: null,
+      selectedSubcategory: null,
+      searchQuery: '',
+    },
+    climateSelection: {
+      activeTab: 'presets',
+      searchQuery: '',
+      selectedLocation: null,
+      uploadedFileName: null,
+    },
+  },
+  mainLayoutSelectedTab: 0,
+  statusBarExpanded: false,
   theme: 'light',
 }
 
@@ -138,6 +153,22 @@ export const useAppStore = create<AppState>()(
           toggleRightPanel: () => set((state) => { state.ui.rightPanelCollapsed = !state.ui.rightPanelCollapsed }),
           toggleSection: (section) => set((state) => {
             state.ui.expandedSections[section] = !state.ui.expandedSections[section]
+          }),
+
+          // Modal preference actions
+          setMaterialDatabasePreferences: (updates) => set((state) => {
+            Object.assign(state.ui.modalPreferences.materialDatabase, updates)
+          }),
+          setClimateSelectionPreferences: (updates) => set((state) => {
+            Object.assign(state.ui.modalPreferences.climateSelection, updates)
+          }),
+
+          // Layout preference actions
+          setMainLayoutTab: (tabIndex) => set((state) => {
+            state.ui.mainLayoutSelectedTab = tabIndex
+          }),
+          setStatusBarExpanded: (expanded) => set((state) => {
+            state.ui.statusBarExpanded = expanded
           }),
 
           // Assembly actions
@@ -499,6 +530,9 @@ export const useAppStore = create<AppState>()(
             leftPanelCollapsed: state.ui.leftPanelCollapsed,
             rightPanelCollapsed: state.ui.rightPanelCollapsed,
             expandedSections: state.ui.expandedSections,
+            modalPreferences: state.ui.modalPreferences,
+            mainLayoutSelectedTab: state.ui.mainLayoutSelectedTab,
+            statusBarExpanded: state.ui.statusBarExpanded,
             theme: state.ui.theme,
           },
         }),

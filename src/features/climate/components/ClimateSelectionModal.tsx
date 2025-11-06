@@ -8,6 +8,7 @@ import { Badge } from '../../../components/ui/Badge';
 import { Search, MapPin, Upload, FileText, Check, AlertCircle } from 'lucide-react';
 import { ClimateData, ClimatePreset, LocationSearchResult, EPWData } from '../types';
 import { cn } from '../../../lib/utils';
+import { useAppStore } from '../../../store/index';
 
 interface ClimateSelectionModalProps {
   isOpen: boolean;
@@ -22,8 +23,17 @@ export function ClimateSelectionModal({
   onSelect,
   presets,
 }: ClimateSelectionModalProps) {
-  const [activeTab, setActiveTab] = useState('presets');
-  const [searchQuery, setSearchQuery] = useState('');
+  // Use store for persistent modal state
+  const modalPrefs = useAppStore((state) => state.ui.modalPreferences.climateSelection);
+  const setModalPrefs = useAppStore((state) => state.actions.setClimateSelectionPreferences);
+
+  const activeTab = modalPrefs.activeTab;
+  const searchQuery = modalPrefs.searchQuery;
+
+  const setActiveTab = (tab: string) => setModalPrefs({ activeTab: tab });
+  const setSearchQuery = (query: string) => setModalPrefs({ searchQuery: query });
+
+  // Local state for current selection (not persisted)
   const [selectedPreset, setSelectedPreset] = useState<ClimatePreset | null>(null);
   const [selectedLocation, setSelectedLocation] = useState<LocationSearchResult | null>(null);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
