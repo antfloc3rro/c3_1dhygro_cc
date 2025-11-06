@@ -57,7 +57,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
         <div className="relative">
           {leftIcon && (
             <div className="absolute left-3 top-1/2 -translate-y-1/2 text-greydark">
-              {typeof leftIcon === 'function' ? React.createElement(leftIcon, { className: 'w-[18px] h-[18px]' }) : leftIcon}
+              {React.isValidElement(leftIcon) ? leftIcon : React.createElement(leftIcon as any, { className: 'w-[18px] h-[18px]' })}
             </div>
           )}
 
@@ -102,7 +102,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
               {hasSuccess ? (
                 <Check className="w-[18px] h-[18px]" style={{ color: '#3E7263' }} />
               ) : (
-                typeof rightIcon === 'function' ? React.createElement(rightIcon, { className: 'w-[18px] h-[18px]' }) : rightIcon
+                React.isValidElement(rightIcon) ? rightIcon : React.createElement(rightIcon as any, { className: 'w-[18px] h-[18px]' })
               )}
             </div>
           )}
