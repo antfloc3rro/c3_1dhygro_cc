@@ -7,6 +7,8 @@ import { LeftPanel } from '@/components/panels/LeftPanel'
 import { InspectorPanel } from '@/components/panels/InspectorPanel'
 import { AssemblyVisual, DataTable, PerformanceSummary } from '@/features/assembly/components'
 import { useAppStore } from '@/store/index'
+import { useAutoSave, useRestoreAutoSave } from '@/hooks/useAutoSave'
+import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
 
 /**
  * MainLayout component - integrates all panels and main content area
@@ -24,6 +26,15 @@ import { useAppStore } from '@/store/index'
 export function MainLayout() {
   const [gridVisible, setGridVisible] = useState(false)
   const [selectedTab, setSelectedTab] = useState(0)
+
+  // Auto-save functionality with 1-second debounce
+  const { saveNow } = useAutoSave(true, 1000)
+
+  // Restore from auto-save on mount
+  useRestoreAutoSave()
+
+  // Keyboard shortcuts (Cmd+Z undo, Cmd+S save, etc.)
+  useKeyboardShortcuts(saveNow)
 
   const layers = useAppStore((state) => state.assembly.layers)
   const surfaces = useAppStore((state) => state.assembly.surfaces)

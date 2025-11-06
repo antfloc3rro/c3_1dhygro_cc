@@ -55,6 +55,7 @@ const initialClimateState: ClimateState = {
   selectedAssetId: null,
   selectedTab: 'weather-stations',
   uploadedFileName: null,
+  climate: null,
 }
 
 const initialSimulationState: SimulationState = {
@@ -262,6 +263,7 @@ export const useAppStore = create<AppState>()(
           setClimateAsset: (assetId) => set((state) => { state.climate.selectedAssetId = assetId }),
           setClimateTab: (tab) => set((state) => { state.climate.selectedTab = tab }),
           setClimateUploadedFile: (fileName) => set((state) => { state.climate.uploadedFileName = fileName }),
+          setClimate: (climate) => set((state) => { state.climate.climate = climate }),
 
           // Simulation actions
           setSimulationStatus: (status) => set((state) => { state.simulation.status = status }),

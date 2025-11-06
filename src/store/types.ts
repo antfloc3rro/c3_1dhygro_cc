@@ -55,6 +55,11 @@ export interface ClimateState {
   selectedAssetId: string | null
   selectedTab: 'weather-stations' | 'standard-conditions' | 'sine-curves' | 'upload-file'
   uploadedFileName: string | null
+  climate: {
+    type: string
+    name: string
+    source: string
+  } | null
 }
 
 // Simulation State

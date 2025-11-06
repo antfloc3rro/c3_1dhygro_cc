@@ -1,9 +1,9 @@
+/* Import Google Fonts for C3RRO Design System */
+@import url('https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700&family=Lato:wght@300;400;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-/* Import Google Fonts for C3RRO Design System */
-@import url('https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700&family=Lato:wght@300;400;700&display=swap');
 
 /* Base styles */
 @layer base {
