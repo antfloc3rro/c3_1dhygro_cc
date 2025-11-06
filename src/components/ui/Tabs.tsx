@@ -3,7 +3,8 @@ import { cn } from '@/utils/index'
 import { LucideIcon } from 'lucide-react'
 
 export interface TabItem {
-  id: string
+  id?: string
+  key?: string
   label: string
   icon?: LucideIcon
   disabled?: boolean
@@ -12,8 +13,10 @@ export interface TabItem {
 
 export interface TabsProps {
   tabs: TabItem[]
-  activeTab: string
-  onChange: (tabId: string) => void
+  activeTab?: string
+  selectedIndex?: number
+  onChange: (value: string | number) => void
+  children?: React.ReactNode
 }
 
 /**
@@ -34,38 +37,65 @@ export interface TabsProps {
  * - Optional icons
  * - Optional badges
  * - Disabled state support
+ * - Supports both string ID pattern (activeTab) and index pattern (selectedIndex)
+ * - Supports children (tab panels) or standalone tabs
  */
-export function Tabs({ tabs, activeTab, onChange }: TabsProps) {
-  return (
-    <div className="flex border-b border-neutral-200">
-      {tabs.map((tab) => {
-        const isActive = activeTab === tab.id
-        const Icon = tab.icon
+export function Tabs({ tabs, activeTab, selectedIndex, onChange, children }: TabsProps) {
+  // Support both API patterns
+  const isIndexMode = selectedIndex !== undefined
+  const currentIndex = isIndexMode ? selectedIndex : tabs.findIndex(t => (t.id || t.key) === activeTab)
 
-        return (
-          <button
-            key={tab.id}
-            onClick={() => !tab.disabled && onChange(tab.id)}
-            className={cn(
-              'flex items-center gap-2 h-11 px-6 text-sm transition-all duration-200 ease-out',
-              'border-b-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-bluegreen focus-visible:ring-offset-2',
-              isActive
-                ? 'border-b-bluegreen font-semibold'
-                : 'border-b-transparent font-normal',
-              !isActive && !tab.disabled && 'hover:border-b-grey',
-              tab.disabled && 'opacity-50 cursor-not-allowed'
-            )}
-            style={{
-              color: isActive ? '#4AB79F' : '#5E5A58',
-            }}
-            disabled={tab.disabled}
-          >
-            {Icon && <Icon className="w-[18px] h-[18px]" />}
-            <span>{tab.label}</span>
-            {tab.badge && <span className="ml-1">{tab.badge}</span>}
-          </button>
-        )
-      })}
+  const handleTabClick = (index: number) => {
+    const tab = tabs[index]
+    if (tab.disabled) return
+
+    if (isIndexMode) {
+      onChange(index)
+    } else {
+      onChange(tab.id || tab.key || '')
+    }
+  }
+
+  return (
+    <div className="flex flex-col flex-1 overflow-hidden">
+      <div className="flex border-b border-neutral-200">
+        {tabs.map((tab, index) => {
+          const isActive = index === currentIndex
+          const Icon = tab.icon
+          const tabId = tab.id || tab.key || `tab-${index}`
+
+          return (
+            <button
+              key={tabId}
+              onClick={() => handleTabClick(index)}
+              className={cn(
+                'flex items-center gap-2 h-11 px-6 text-sm transition-all duration-200 ease-out',
+                'border-b-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-bluegreen focus-visible:ring-offset-2',
+                isActive
+                  ? 'border-b-bluegreen font-semibold'
+                  : 'border-b-transparent font-normal',
+                !isActive && !tab.disabled && 'hover:border-b-grey',
+                tab.disabled && 'opacity-50 cursor-not-allowed'
+              )}
+              style={{
+                color: isActive ? '#4AB79F' : '#5E5A58',
+              }}
+              disabled={tab.disabled}
+            >
+              {Icon && <Icon className="w-[18px] h-[18px]" />}
+              <span>{tab.label}</span>
+              {tab.badge && <span className="ml-1">{tab.badge}</span>}
+            </button>
+          )
+        })}
+      </div>
+
+      {/* Render children (tab panels) if provided */}
+      {children && (
+        <div className="flex-1 overflow-hidden">
+          {React.Children.toArray(children)[currentIndex]}
+        </div>
+      )}
     </div>
   )
 }
