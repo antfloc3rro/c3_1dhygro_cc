@@ -48,13 +48,24 @@ export function MaterialDatabaseModal({
 
   // Filter materials by category, subcategory, and search query
   const filteredMaterials = useMemo(() => {
+    console.log('🔍 MaterialDatabaseModal Debug:');
+    console.log('  Total materials:', materials.length);
+    console.log('  Selected category:', selectedCategory);
+    console.log('  Selected subcategory:', selectedSubcategory);
+    console.log('  Search query:', searchQuery);
+
     let result = materials;
 
     // Filter by subcategory if selected, otherwise by category
     if (selectedSubcategory) {
       result = result.filter((mat) => mat.subcategory === selectedSubcategory);
+      console.log('  After subcategory filter:', result.length);
     } else if (selectedCategory) {
       result = result.filter((mat) => mat.category === selectedCategory);
+      console.log('  After category filter:', result.length);
+      if (result.length > 0) {
+        console.log('  Sample material categories:', result.slice(0, 3).map(m => m.category));
+      }
     }
 
     // Additional filter by search query
@@ -66,8 +77,10 @@ export function MaterialDatabaseModal({
           mat.category.toLowerCase().includes(query) ||
           mat.subcategory.toLowerCase().includes(query)
       );
+      console.log('  After search filter:', result.length);
     }
 
+    console.log('  ✅ Final filtered materials:', result.length);
     return result;
   }, [selectedCategory, selectedSubcategory, searchQuery, materials]);
 
