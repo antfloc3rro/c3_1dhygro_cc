@@ -177,6 +177,8 @@ export function MainLayout() {
                   surfaces={surfaces}
                   monitors={monitors}
                   totalThickness={totalThickness}
+                  gridVisible={gridVisible}
+                  onToggleGrid={() => setGridVisible(!gridVisible)}
                 />
               ) : (
                 <div className="bg-white border border-dashed border-neutral-300 rounded-lg p-12 text-center">
