@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Modal } from '../../../components/ui/Modal';
 import { Button } from '../../../components/ui/Button';
 import { Check, X } from 'lucide-react';
@@ -60,6 +60,17 @@ export function ClimateSelectionModal({
 
   const [uploadedFile, setUploadedFile] = useState<EPWData | WACData | null>(null);
   const [selectedLocation, setSelectedLocation] = useState<LocationSearchResult | null>(null);
+
+  // Reset state when modal opens with new initial values
+  useEffect(() => {
+    if (isOpen) {
+      setApplication(initialApplication);
+      setClimateType(initialClimateType);
+      setView('selection');
+      // Reset selections when switching contexts
+      setSelectedLocation(null);
+    }
+  }, [isOpen, initialApplication, initialClimateType]);
 
   // Determine if we can apply the current selection
   const canApply = useMemo(() => {
