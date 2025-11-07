@@ -8,6 +8,8 @@ import { ClimateStatisticsPanel } from './ClimateStatisticsPanel';
 import { SineCurveView } from './views/SineCurveView';
 import { StandardConditionsView } from './views/StandardConditionsView';
 import { WeatherStationView } from './views/WeatherStationView';
+import { UploadFileView } from './views/UploadFileView';
+import { ClimateDataViewer } from './ClimateDataViewer';
 import { cn } from '../../../lib/utils';
 
 interface ClimateSelectionModalProps {
@@ -60,6 +62,7 @@ export function ClimateSelectionModal({
 
   const [uploadedFile, setUploadedFile] = useState<EPWData | WACData | null>(null);
   const [selectedLocation, setSelectedLocation] = useState<LocationSearchResult | null>(null);
+  const [viewerData, setViewerData] = useState<EPWData | WACData | null>(null);
 
   // Reset state when modal opens with new initial values
   useEffect(() => {
@@ -69,6 +72,7 @@ export function ClimateSelectionModal({
       setView('selection');
       // Reset selections when switching contexts
       setSelectedLocation(null);
+      setViewerData(null);
     }
   }, [isOpen, initialApplication, initialClimateType]);
 
@@ -170,7 +174,30 @@ export function ClimateSelectionModal({
         };
         break;
 
-      // TODO: Implement upload climate type
+      case 'upload':
+        if (!uploadedFile) return;
+        climateData = {
+          id: `upload-${Date.now()}`,
+          name: uploadedFile.fileName,
+          type: 'upload',
+          source: 'User Upload',
+          uploadedData: uploadedFile,
+          variables: {
+            temperature: true,
+            relativeHumidity: true,
+            precipitation: true,
+            solarRadiation: true,
+            windSpeed: true,
+            windDirection: true,
+            pressure: false,
+          },
+          surfaceParameters: application === 'outdoor' ? {
+            heatTransferResistance,
+            rainCoefficient,
+          } : undefined,
+        };
+        break;
+
       default:
         return;
     }
@@ -183,6 +210,15 @@ export function ClimateSelectionModal({
   const showRightPanel = climateType === 'weather-station' || climateType === 'upload';
 
   return (
+    <>
+      {/* Climate Data Viewer - Full Screen Overlay */}
+      {viewerData && (
+        <ClimateDataViewer
+          isOpen={!!viewerData}
+          onClose={() => setViewerData(null)}
+          data={viewerData}
+        />
+      )}
     <Modal
       isOpen={isOpen}
       onClose={onClose}
@@ -218,12 +254,10 @@ export function ClimateSelectionModal({
             )}
 
             {climateType === 'upload' && (
-              <div className="flex items-center justify-center h-full p-lg">
-                <div className="text-center text-greydark">
-                  <p className="text-sm">Upload File view coming soon</p>
-                  <p className="text-xs mt-sm">EPW and WAC file support</p>
-                </div>
-              </div>
+              <UploadFileView
+                onFileUpload={setUploadedFile}
+                onViewData={setViewerData}
+              />
             )}
           </div>
 
@@ -232,6 +266,7 @@ export function ClimateSelectionModal({
             <ClimateStatisticsPanel
               climateType={climateType}
               application={application}
+              statistics={uploadedFile?.statistics}
               sineCurveData={climateType === 'sine-curve' ? sineCurveData : undefined}
               heatTransferResistance={heatTransferResistance}
               rainCoefficient={rainCoefficient}
@@ -240,24 +275,7 @@ export function ClimateSelectionModal({
             />
           )}
         </div>
-      ) : (
-        /* Viewer View - Full Width Climate Data Visualization */
-        <div className="h-[calc(85vh-120px)]">
-          <div className="flex items-center justify-center h-full text-greydark">
-            <div className="text-center">
-              <p className="text-sm">Climate Data Viewer coming soon</p>
-              <p className="text-xs mt-sm">Full-screen visualization for uploaded files</p>
-              <Button
-                variant="secondary"
-                onClick={() => setView('selection')}
-                className="mt-md"
-              >
-                ← Back to Selection
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+      ) : null}
 
       {/* Footer */}
       <div className="flex justify-between items-center pt-lg border-t border-greylight mt-lg">
@@ -288,5 +306,6 @@ export function ClimateSelectionModal({
         </div>
       </div>
     </Modal>
+    </>
   );
 }
