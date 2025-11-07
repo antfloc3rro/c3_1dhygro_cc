@@ -80,17 +80,17 @@ export function StandardConditionsView({ value, onChange }: StandardConditionsVi
     <div className="space-y-lg">
       {/* Standard Selection */}
       <div className="space-y-md">
-        <Label htmlFor="standard-select">Select Standard</Label>
         <Select
-          id="standard-select"
+          label="Select Standard"
           value={standardData.standard}
-          onChange={(e) => handleStandardChange(e.target.value as StandardClimateData['standard'])}
-        >
-          <option value="ASHRAE-160">ASHRAE 160</option>
-          <option value="EN-15026">EN 15026 / DIN 4108</option>
-          <option value="ISO-13788">ISO 13788</option>
-          <option value="WTA-6-2">WTA 6-2</option>
-        </Select>
+          onChange={(value) => handleStandardChange(value as StandardClimateData['standard'])}
+          options={[
+            { value: 'ASHRAE-160', label: 'ASHRAE 160' },
+            { value: 'EN-15026', label: 'EN 15026 / DIN 4108' },
+            { value: 'ISO-13788', label: 'ISO 13788' },
+            { value: 'WTA-6-2', label: 'WTA 6-2' },
+          ]}
+        />
       </div>
 
       {/* Standard Description */}
@@ -129,21 +129,21 @@ export function StandardConditionsView({ value, onChange }: StandardConditionsVi
         {standardData.standard === 'ASHRAE-160' && (
           <div className="space-y-md">
             <div>
-              <Label htmlFor="climate-zone">Climate Zone</Label>
               <Select
-                id="climate-zone"
+                label="Climate Zone"
                 value={standardData.parameters.climateZone || 4}
-                onChange={(e) => handleParameterChange('climateZone', parseInt(e.target.value))}
-              >
-                <option value={1}>Zone 1 - Hot-Humid</option>
-                <option value={2}>Zone 2 - Hot-Dry</option>
-                <option value={3}>Zone 3 - Warm-Marine</option>
-                <option value={4}>Zone 4 - Mixed-Humid</option>
-                <option value={5}>Zone 5 - Cool-Humid</option>
-                <option value={6}>Zone 6 - Cold</option>
-                <option value={7}>Zone 7 - Very Cold</option>
-                <option value={8}>Zone 8 - Subarctic</option>
-              </Select>
+                onChange={(value) => handleParameterChange('climateZone', value)}
+                options={[
+                  { value: 1, label: 'Zone 1 - Hot-Humid' },
+                  { value: 2, label: 'Zone 2 - Hot-Dry' },
+                  { value: 3, label: 'Zone 3 - Warm-Marine' },
+                  { value: 4, label: 'Zone 4 - Mixed-Humid' },
+                  { value: 5, label: 'Zone 5 - Cool-Humid' },
+                  { value: 6, label: 'Zone 6 - Cold' },
+                  { value: 7, label: 'Zone 7 - Very Cold' },
+                  { value: 8, label: 'Zone 8 - Subarctic' },
+                ]}
+              />
             </div>
 
             <div>
@@ -190,16 +190,16 @@ export function StandardConditionsView({ value, onChange }: StandardConditionsVi
         {standardData.standard === 'EN-15026' && (
           <div className="space-y-md">
             <div>
-              <Label htmlFor="building-type">Building Type</Label>
               <Select
-                id="building-type"
+                label="Building Type"
                 value={standardData.parameters.buildingType || 'residential'}
-                onChange={(e) => handleParameterChange('buildingType', e.target.value)}
-              >
-                <option value="residential">Residential</option>
-                <option value="office">Office</option>
-                <option value="industrial">Industrial</option>
-              </Select>
+                onChange={(value) => handleParameterChange('buildingType', value)}
+                options={[
+                  { value: 'residential', label: 'Residential' },
+                  { value: 'office', label: 'Office' },
+                  { value: 'industrial', label: 'Industrial' },
+                ]}
+              />
             </div>
 
             <div>
