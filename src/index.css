@@ -1,3 +1,6 @@
+/* Import Google Fonts for C3RRO Design System */
+@import url('https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700&family=Lato:wght@300;400;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -9,17 +12,22 @@
   }
 
   body {
-    @apply bg-neutral-50 text-neutral-900 font-sans;
+    @apply bg-neutral-50 font-sans;
+    color: #33302F; /* text color from design system */
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading;
   }
 
   button {
-    @apply transition-colors duration-150;
+    @apply transition-all duration-200 ease-out;
   }
 
   input,
   select,
   textarea {
-    @apply transition-colors duration-150;
+    @apply transition-all duration-200 ease-out;
   }
 }
 
@@ -31,15 +39,28 @@
   }
 
   .btn-primary {
-    @apply bg-teal-600 text-white hover:bg-teal-700 active:bg-teal-800;
+    @apply text-white hover:brightness-110 active:brightness-95;
+    background-color: #4AB79F; /* bluegreen from design system */
   }
 
   .btn-secondary {
-    @apply bg-neutral-200 text-neutral-900 hover:bg-neutral-300 active:bg-neutral-400;
+    @apply bg-white border border-greylight hover:bg-neutral-50 active:bg-neutral-100;
+    color: #33302F; /* text color */
   }
 
   .btn-ghost {
-    @apply bg-transparent text-neutral-700 hover:bg-neutral-100 active:bg-neutral-200;
+    @apply bg-transparent hover:bg-neutral-100 active:bg-neutral-200;
+    color: #33302F; /* text color */
+  }
+
+  .btn-danger {
+    @apply text-white hover:brightness-105 active:brightness-95;
+    background-color: #C04343; /* red from design system */
+  }
+
+  .btn-warning {
+    @apply text-white hover:brightness-105 active:brightness-95;
+    background-color: #E18E2A; /* orange from design system */
   }
 
   .btn-small {
@@ -48,11 +69,22 @@
 
   /* Inputs */
   .input {
-    @apply px-3 py-2 border border-neutral-300 rounded-md bg-white text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all;
+    @apply px-3 py-2 border border-neutral-300 rounded-md bg-white placeholder-neutral-400 focus:outline-none transition-all;
+    color: #33302F;
+    box-shadow: 0 0 0 0 rgba(74, 183, 159, 0);
+  }
+
+  .input:focus {
+    border-color: #4AB79F;
+    box-shadow: 0 0 0 3px rgba(74, 183, 159, 0.1), 0 0 0 2px rgba(74, 183, 159, 1);
   }
 
   .input-error {
-    @apply border-error focus:ring-error;
+    border-color: #C04343;
+  }
+
+  .input-error:focus {
+    box-shadow: 0 0 0 3px rgba(192, 67, 67, 0.1), 0 0 0 2px rgba(192, 67, 67, 1);
   }
 
   /* Cards */
@@ -97,9 +129,13 @@
     background-color: rgba(148, 163, 184, 0.7);
   }
 
-  /* Focus ring */
+  /* Focus ring - 2px ring in bluegreen with 2px offset */
   .focus-ring {
-    @apply focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2;
+    @apply focus:outline-none;
+  }
+
+  .focus-ring:focus {
+    box-shadow: 0 0 0 3px rgba(74, 183, 159, 0.1), 0 0 0 2px rgba(74, 183, 159, 1);
   }
 
   /* Divider */

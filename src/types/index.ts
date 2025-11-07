@@ -1,4 +1,19 @@
 // Assembly and Component Types
+
+export interface MaterialFunctionDataPoint {
+  x: number;
+  y: number;
+}
+
+export interface MaterialFunction {
+  dataPoints: MaterialFunctionDataPoint[];
+  xLabel: string;
+  yLabel: string;
+  xUnit: string;
+  yUnit: string;
+  description?: string;
+}
+
 export interface Material {
   id: string;
   name: string;
@@ -6,8 +21,14 @@ export interface Material {
   bulkDensity: number; // kg/m³
   porosity: number; // m³/m³
   heatCapacity: number; // J/kgK
-  thermalConductivity: number; // W/mK
+  thermalConductivity: number; // W/mK (dry value)
   vaporResistanceFactor: number; // [-]
+  functions?: {
+    moistureStorage?: MaterialFunction;      // w(φ) - water content vs relative humidity
+    liquidTransport?: MaterialFunction;      // Dw(w) - liquid diffusivity vs water content
+    vaporDiffusion?: MaterialFunction;       // μ(φ) - vapor resistance vs relative humidity
+    moistureDependentThermalConductivity?: MaterialFunction;  // λ(w) - thermal conductivity vs moisture
+  };
 }
 
 export interface Layer {
@@ -15,12 +36,35 @@ export interface Layer {
   material: Material;
   thickness: number; // m (stored in SI units)
   name?: string;
+  initialTemperature?: number; // °C
+  initialHumidity?: number; // % RH
+  gridCells?: number | 'auto'; // Grid discretization
 }
 
 export interface Surface {
   id: string;
   name: string;
   type: 'exterior' | 'interior' | 'interface';
+  coefficientMode?: string; // 'standard', 'custom', etc.
+  coefficients?: {
+    heatTransferCoefficient: number; // α [W/(m²·K)]
+    shortWaveRadiationAbsorptivity: number; // [-] 0-1
+    longWaveRadiationEmissivity: number; // [-] 0-1
+    sdValue?: number; // sd-value [m] for vapor diffusion resistance
+    rainAbsorptionFactor?: number; // [-] 0-1 (exterior only)
+    rainDepositionFactor?: number; // [-] (exterior only)
+  };
+}
+
+export type MonitorType = 'point' | 'average' | 'profile';
+
+export interface MonitorVariables {
+  temperature: boolean;
+  relativeHumidity: boolean;
+  waterContent: boolean;
+  heatFlux: boolean;
+  vaporFlux: boolean;
+  liquidFlux: boolean;
 }
 
 export interface Monitor {
@@ -28,6 +72,10 @@ export interface Monitor {
   position: number; // 0-1 (relative position in layer)
   layerId: string;
   name: string;
+  type?: MonitorType;
+  variables?: MonitorVariables;
+  outputInterval?: 'hourly' | 'daily' | 'monthly';
+  color?: string;
 }
 
 export interface Assembly {
