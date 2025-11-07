@@ -16,10 +16,37 @@ export function StandardConditionsView({ value, onChange }: StandardConditionsVi
   const [standardData, setStandardData] = useState<StandardClimateData>(value);
 
   const handleStandardChange = (standard: StandardClimateData['standard']) => {
-    const newData: StandardClimateData = {
-      standard,
-      parameters: {},
-    };
+    // Set default parameters for each standard
+    let defaultParams: StandardClimateData['parameters'] = {};
+
+    switch (standard) {
+      case 'EN-15026':
+        defaultParams = { moistureLoad: 'medium' };
+        break;
+      case 'ISO-13788':
+        defaultParams = { meanTemperature: 20, humidityClass: 3 };
+        break;
+      case 'ASHRAE-160':
+        defaultParams = {
+          acType: 'ac-with-dehumidification',
+          floatingTempShift: 2.8,
+          heatingSetpoint: 21.1,
+          coolingSetpoint: 23.9,
+          rhSetpoint: 50,
+          numBedrooms: 2,
+          jettedTub: false,
+          userDefinedMoistureGen: false,
+          moistureGenRate: 0.000105,
+          constructionAirtightness: 'standard',
+          airExchangeRate: 0.2,
+          buildingVolume: 500,
+        };
+        break;
+      default:
+        break;
+    }
+
+    const newData: StandardClimateData = { standard, parameters: defaultParams };
     setStandardData(newData);
     onChange(newData);
   };
@@ -39,29 +66,19 @@ export function StandardConditionsView({ value, onChange }: StandardConditionsVi
   // Generate preview data based on standard
   const generatePreviewData = () => {
     const data = [];
-
     for (let month = 0; month < 12; month++) {
-      let temperature = 10;
-      let humidity = 70;
+      let temperature = 20;
+      let humidity = 50;
 
-      // Simplified typical patterns for each standard
+      // Simplified typical patterns
       if (standardData.standard === 'ASHRAE-160') {
-        const zone = standardData.parameters.climateZone || 4;
-        const baseTemp = [25, 20, 15, 10, 5, 0, -5, -10][zone - 1] || 10;
-        temperature = baseTemp + 10 * Math.sin((month / 12) * 2 * Math.PI);
-        humidity = 70 - (standardData.parameters.moistureLoad === 'high' ? 10 :
-                        standardData.parameters.moistureLoad === 'low' ? -10 : 0);
-      } else if (standardData.standard === 'EN-15026') {
-        temperature = (standardData.parameters.internalTemp || 20);
-        humidity = 50 + (standardData.parameters.airChangeRate || 0.5) * 20;
+        temperature = (standardData.parameters.heatingSetpoint || 21) +
+                     5 * Math.sin((month / 12) * 2 * Math.PI);
+        humidity = standardData.parameters.rhSetpoint || 50;
       } else if (standardData.standard === 'ISO-13788') {
-        temperature = standardData.parameters.internalTemp || 20;
+        temperature = standardData.parameters.meanTemperature || 20;
         const humidityClass = standardData.parameters.humidityClass || 3;
         humidity = [35, 45, 55, 65, 75][humidityClass - 1] || 55;
-      } else {
-        // WTA 6-2 or default
-        temperature = 10 + 10 * Math.sin((month / 12) * 2 * Math.PI);
-        humidity = 70 - 15 * Math.sin((month / 12) * 2 * Math.PI);
       }
 
       data.push({
@@ -70,14 +87,13 @@ export function StandardConditionsView({ value, onChange }: StandardConditionsVi
         humidity: parseFloat(humidity.toFixed(1)),
       });
     }
-
     return data;
   };
 
   const previewData = generatePreviewData();
 
   return (
-    <div className="space-y-lg">
+    <div className="space-y-lg max-w-5xl mx-auto">
       {/* Standard Selection */}
       <div className="space-y-md">
         <Select
@@ -85,268 +101,299 @@ export function StandardConditionsView({ value, onChange }: StandardConditionsVi
           value={standardData.standard}
           onChange={(value) => handleStandardChange(value as StandardClimateData['standard'])}
           options={[
-            { value: 'ASHRAE-160', label: 'ASHRAE 160' },
-            { value: 'EN-15026', label: 'EN 15026 / DIN 4108' },
+            { value: 'EN-15026', label: 'EN 15026 / DIN 4108 / WTA 6-2' },
             { value: 'ISO-13788', label: 'ISO 13788' },
+            { value: 'ASHRAE-160', label: 'ASHRAE 160' },
             { value: 'WTA-6-2', label: 'WTA 6-2' },
           ]}
         />
       </div>
 
-      {/* Standard Description */}
-      <div className="bg-bluelight/20 border-l-4 border-blue p-md rounded text-sm">
-        {standardData.standard === 'ASHRAE-160' && (
-          <p>
-            <strong>ASHRAE 160:</strong> Design Criteria for Moisture Control in Buildings. Provides climate
-            zones and moisture load classifications for North American conditions.
-          </p>
-        )}
-        {standardData.standard === 'EN-15026' && (
-          <p>
-            <strong>EN 15026:</strong> Hygrothermal performance of building components and building elements.
-            European standard for building physics calculations.
-          </p>
-        )}
-        {standardData.standard === 'ISO-13788' && (
-          <p>
-            <strong>ISO 13788:</strong> Hygrothermal performance of building components and building elements.
-            International standard with humidity class classifications.
-          </p>
-        )}
-        {standardData.standard === 'WTA-6-2' && (
-          <p>
-            <strong>WTA 6-2:</strong> Simulation of heat and moisture transfer. German guideline for
-            hygrothermal simulations in heritage buildings.
-          </p>
-        )}
-      </div>
-
-      {/* Parameters based on selected standard */}
-      <div className="space-y-md">
-        <h3 className="text-sm font-semibold uppercase text-greydark">Parameters</h3>
-
-        {/* ASHRAE 160 Parameters */}
-        {standardData.standard === 'ASHRAE-160' && (
-          <div className="space-y-md">
-            <div>
-              <Select
-                label="Climate Zone"
-                value={standardData.parameters.climateZone || 4}
-                onChange={(value) => handleParameterChange('climateZone', value)}
-                options={[
-                  { value: 1, label: 'Zone 1 - Hot-Humid' },
-                  { value: 2, label: 'Zone 2 - Hot-Dry' },
-                  { value: 3, label: 'Zone 3 - Warm-Marine' },
-                  { value: 4, label: 'Zone 4 - Mixed-Humid' },
-                  { value: 5, label: 'Zone 5 - Cool-Humid' },
-                  { value: 6, label: 'Zone 6 - Cold' },
-                  { value: 7, label: 'Zone 7 - Very Cold' },
-                  { value: 8, label: 'Zone 8 - Subarctic' },
-                ]}
-              />
-            </div>
-
-            <div>
-              <Label>Moisture Load</Label>
-              <div className="grid grid-cols-3 gap-xs mt-xs">
-                {['low', 'medium', 'high'].map((level) => (
-                  <button
-                    key={level}
-                    onClick={() => handleParameterChange('moistureLoad', level)}
-                    className={`px-md py-sm text-sm font-medium rounded transition-colors ${
-                      standardData.parameters.moistureLoad === level
-                        ? 'bg-bluegreen text-white'
-                        : 'bg-white text-text border border-greylight hover:bg-greylight/10'
-                    }`}
-                  >
-                    {level.charAt(0).toUpperCase() + level.slice(1)}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <Label>Temperature Level</Label>
-              <div className="grid grid-cols-3 gap-xs mt-xs">
-                {['low', 'normal', 'high'].map((level) => (
-                  <button
-                    key={level}
-                    onClick={() => handleParameterChange('temperatureLevel', level)}
-                    className={`px-md py-sm text-sm font-medium rounded transition-colors ${
-                      standardData.parameters.temperatureLevel === level
-                        ? 'bg-bluegreen text-white'
-                        : 'bg-white text-text border border-greylight hover:bg-greylight/10'
-                    }`}
-                  >
-                    {level.charAt(0).toUpperCase() + level.slice(1)}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* EN 15026 Parameters */}
+      {/* Parameters Section */}
+      <div className="space-y-lg">
+        {/* EN 15026 Parameters - Just moisture load */}
         {standardData.standard === 'EN-15026' && (
           <div className="space-y-md">
-            <div>
-              <Select
-                label="Building Type"
-                value={standardData.parameters.buildingType || 'residential'}
-                onChange={(value) => handleParameterChange('buildingType', value)}
-                options={[
-                  { value: 'residential', label: 'Residential' },
-                  { value: 'office', label: 'Office' },
-                  { value: 'industrial', label: 'Industrial' },
-                ]}
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="moisture-gen-rate">Moisture Generation Rate [g/(m³·s)]</Label>
-              <Input
-                id="moisture-gen-rate"
-                type="number"
-                value={standardData.parameters.moistureGenRate || 0.002}
-                onChange={(e) => handleParameterChange('moistureGenRate', parseFloat(e.target.value) || 0.002)}
-                step="0.0001"
-                min="0"
-                max="0.01"
-              />
-              <p className="text-xs text-greydark mt-xs">
-                Default: 0.002 g/(m³·s) for residential
-              </p>
-            </div>
-
-            <div>
-              <Label htmlFor="air-change-rate">Air Change Rate [1/h]</Label>
-              <Input
-                id="air-change-rate"
-                type="number"
-                value={standardData.parameters.airChangeRate || 0.5}
-                onChange={(e) => handleParameterChange('airChangeRate', parseFloat(e.target.value) || 0.5)}
-                step="0.1"
-                min="0"
-                max="5"
-              />
-              <p className="text-xs text-greydark mt-xs">
-                Default: 0.5 1/h (typical residential)
-              </p>
-            </div>
+            <h3 className="text-sm font-semibold uppercase text-greydark">Moisture Load</h3>
+            <Select
+              label="Moisture Load"
+              value={standardData.parameters.moistureLoad || 'medium'}
+              onChange={(value) => handleParameterChange('moistureLoad', value)}
+              options={[
+                { value: 'low', label: 'Low Moisture Load' },
+                { value: 'medium', label: 'Medium Moisture Load' },
+                { value: 'medium-high', label: 'Medium Moisture Load +5% (Design)' },
+                { value: 'high', label: 'High Moisture Load' },
+                { value: 'very-high', label: 'Very High Moisture Load' },
+              ]}
+            />
           </div>
         )}
 
-        {/* ISO 13788 Parameters */}
+        {/* ISO 13788 Parameters - Mean temperature and humidity class */}
         {standardData.standard === 'ISO-13788' && (
           <div className="space-y-md">
-            <div>
-              <Label htmlFor="internal-temp">Internal Temperature [°C]</Label>
-              <Input
-                id="internal-temp"
-                type="number"
-                value={standardData.parameters.internalTemp || 20}
-                onChange={(e) => handleParameterChange('internalTemp', parseFloat(e.target.value) || 20)}
-                step="1"
-                min="15"
-                max="25"
-              />
-              <p className="text-xs text-greydark mt-xs">
-                Typical range: 18-22°C
-              </p>
-            </div>
+            <h3 className="text-sm font-semibold uppercase text-greydark">Temperature & Humidity</h3>
 
-            <div>
-              <Label>Humidity Class</Label>
-              <div className="space-y-xs mt-xs">
-                {[
-                  { value: 1, label: 'Class 1 (Low)', range: '30-40% RH', desc: 'Storage facilities, unoccupied spaces' },
-                  { value: 2, label: 'Class 2 (Medium)', range: '40-50% RH', desc: 'Offices, shops' },
-                  { value: 3, label: 'Class 3 (Normal)', range: '50-60% RH', desc: 'Dwellings with normal occupancy' },
-                  { value: 4, label: 'Class 4 (High)', range: '60-70% RH', desc: 'Restaurants, sports halls' },
-                  { value: 5, label: 'Class 5 (Very High)', range: '70-80% RH', desc: 'Laundries, breweries, indoor pools' },
-                ].map((cls) => (
-                  <button
-                    key={cls.value}
-                    onClick={() => handleParameterChange('humidityClass', cls.value)}
-                    className={`w-full text-left p-sm rounded border transition-colors ${
-                      standardData.parameters.humidityClass === cls.value
-                        ? 'bg-bluegreen/10 border-bluegreen'
-                        : 'bg-white border-greylight hover:bg-greylight/5'
-                    }`}
-                  >
-                    <div className="font-medium text-sm">{cls.label}</div>
-                    <div className="text-xs text-greydark mt-xs">
-                      {cls.range} - {cls.desc}
-                    </div>
-                  </button>
-                ))}
+            <div className="grid grid-cols-2 gap-md">
+              <div>
+                <Label htmlFor="mean-temp">Mean Value [°C]</Label>
+                <Input
+                  id="mean-temp"
+                  type="number"
+                  value={standardData.parameters.meanTemperature || 20}
+                  onChange={(e) => handleParameterChange('meanTemperature', parseFloat(e.target.value) || 20)}
+                  step="0.1"
+                  min="15"
+                  max="25"
+                />
+              </div>
+
+              <div>
+                <Select
+                  label="Humidity Class"
+                  value={standardData.parameters.humidityClass || 3}
+                  onChange={(value) => handleParameterChange('humidityClass', value)}
+                  options={[
+                    { value: 1, label: 'Humidity Class 1 (Low: 30-40% RH)' },
+                    { value: 2, label: 'Humidity Class 2 (Medium: 40-50% RH)' },
+                    { value: 3, label: 'Humidity Class 3 (Normal: 50-60% RH)' },
+                    { value: 4, label: 'Humidity Class 4 (High: 60-70% RH)' },
+                    { value: 5, label: 'Humidity Class 5 (Very High: 70-80% RH)' },
+                  ]}
+                />
               </div>
             </div>
           </div>
         )}
 
-        {/* WTA 6-2 Parameters */}
+        {/* ASHRAE 160 Parameters - All detailed inputs */}
+        {standardData.standard === 'ASHRAE-160' && (
+          <div className="space-y-lg">
+            {/* Air-conditioning system */}
+            <div className="space-y-md">
+              <h3 className="text-sm font-semibold uppercase text-greydark">Air-conditioning System</h3>
+
+              <Select
+                label="AC Type"
+                value={standardData.parameters.acType || 'ac-with-dehumidification'}
+                onChange={(value) => handleParameterChange('acType', value)}
+                options={[
+                  { value: 'none', label: 'None' },
+                  { value: 'ac-only', label: 'AC Only' },
+                  { value: 'ac-with-dehumidification', label: 'AC with Dehumidification' },
+                ]}
+              />
+
+              <div className="grid grid-cols-2 gap-md">
+                <div>
+                  <Label htmlFor="floating-temp">floating indoor temperature shift [°C]</Label>
+                  <Input
+                    id="floating-temp"
+                    type="number"
+                    value={standardData.parameters.floatingTempShift || 2.8}
+                    onChange={(e) => handleParameterChange('floatingTempShift', parseFloat(e.target.value) || 2.8)}
+                    step="0.1"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="rh-setpoint">R.H. control setpoint [%]</Label>
+                  <Input
+                    id="rh-setpoint"
+                    type="number"
+                    value={standardData.parameters.rhSetpoint || 50}
+                    onChange={(e) => handleParameterChange('rhSetpoint', parseFloat(e.target.value) || 50)}
+                    step="1"
+                    min="0"
+                    max="100"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-md">
+                <div>
+                  <Label htmlFor="heating-setpoint">set point for heating [°C]</Label>
+                  <Input
+                    id="heating-setpoint"
+                    type="number"
+                    value={standardData.parameters.heatingSetpoint || 21.1}
+                    onChange={(e) => handleParameterChange('heatingSetpoint', parseFloat(e.target.value) || 21.1)}
+                    step="0.1"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="cooling-setpoint">set point for cooling [°C]</Label>
+                  <Input
+                    id="cooling-setpoint"
+                    type="number"
+                    value={standardData.parameters.coolingSetpoint || 23.9}
+                    onChange={(e) => handleParameterChange('coolingSetpoint', parseFloat(e.target.value) || 23.9)}
+                    step="0.1"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Relative Humidity / Moisture Generation Rate */}
+            <div className="space-y-md">
+              <h3 className="text-sm font-semibold uppercase text-greydark">Relative Humidity</h3>
+              <p className="text-xs text-greydark">Moisture Generation Rate</p>
+
+              <div className="grid grid-cols-2 gap-md">
+                <div>
+                  <Label htmlFor="num-bedrooms">number of bedrooms:</Label>
+                  <Input
+                    id="num-bedrooms"
+                    type="number"
+                    value={standardData.parameters.numBedrooms || 2}
+                    onChange={(e) => handleParameterChange('numBedrooms', parseInt(e.target.value) || 2)}
+                    min="1"
+                    max="10"
+                  />
+                </div>
+
+                <div className="flex items-end">
+                  <label className="flex items-center gap-sm cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={standardData.parameters.jettedTub || false}
+                      onChange={(e) => handleParameterChange('jettedTub', e.target.checked)}
+                      className="w-4 h-4 text-bluegreen border-greylight rounded focus:ring-bluegreen"
+                    />
+                    <span className="text-sm">Jetted tub without exhaust fan</span>
+                  </label>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-sm">
+                <input
+                  type="checkbox"
+                  id="user-defined-moisture"
+                  checked={standardData.parameters.userDefinedMoistureGen || false}
+                  onChange={(e) => handleParameterChange('userDefinedMoistureGen', e.target.checked)}
+                  className="w-4 h-4 text-bluegreen border-greylight rounded focus:ring-bluegreen"
+                />
+                <Label htmlFor="user-defined-moisture" className="mb-0">User-defined Moisture Generation Rate</Label>
+              </div>
+
+              {standardData.parameters.userDefinedMoistureGen && (
+                <div>
+                  <Label htmlFor="moisture-gen-rate">Moisture Generation Rate [kg/s]</Label>
+                  <Input
+                    id="moisture-gen-rate"
+                    type="number"
+                    value={standardData.parameters.moistureGenRate || 0.000105}
+                    onChange={(e) => handleParameterChange('moistureGenRate', parseFloat(e.target.value) || 0.000105)}
+                    step="0.000001"
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Air Exchange Rate */}
+            <div className="space-y-md">
+              <h3 className="text-sm font-semibold uppercase text-greydark">Air Exchange Rate</h3>
+
+              <Select
+                label="Construction Airtightness"
+                value={standardData.parameters.constructionAirtightness || 'standard'}
+                onChange={(value) => handleParameterChange('constructionAirtightness', value)}
+                options={[
+                  { value: 'leaky', label: 'leaky construction' },
+                  { value: 'standard', label: 'standard construction' },
+                  { value: 'tight', label: 'tight construction' },
+                ]}
+              />
+
+              <div className="grid grid-cols-2 gap-md">
+                <div>
+                  <Label htmlFor="air-exchange">Air Exchange Rate [1/h]</Label>
+                  <Input
+                    id="air-exchange"
+                    type="number"
+                    value={standardData.parameters.airExchangeRate || 0.2}
+                    onChange={(e) => handleParameterChange('airExchangeRate', parseFloat(e.target.value) || 0.2)}
+                    step="0.1"
+                    min="0"
+                    max="10"
+                  />
+                </div>
+
+                <div className="bg-yellowlight/20 border border-yellow rounded p-sm">
+                  <Label htmlFor="building-volume">building volume [m³]</Label>
+                  <Input
+                    id="building-volume"
+                    type="number"
+                    value={standardData.parameters.buildingVolume || 500}
+                    onChange={(e) => handleParameterChange('buildingVolume', parseFloat(e.target.value) || 500)}
+                    step="10"
+                    min="10"
+                    className="font-semibold"
+                  />
+                  <p className="text-xs text-greydark mt-xs">Most commonly modified</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* WTA 6-2 */}
         {standardData.standard === 'WTA-6-2' && (
-          <div className="bg-yellowlight/30 border border-yellow p-md rounded text-sm">
+          <div className="bg-bluelight/20 border-l-4 border-blue p-md rounded text-sm">
             <p className="font-medium mb-sm">WTA 6-2 Standard</p>
             <p className="text-greydark">
-              This standard provides guidelines for hygrothermal simulations, particularly for heritage buildings.
-              Default climate parameters are used based on German climate zones.
-            </p>
-            <p className="text-greydark mt-sm">
-              Additional parameters will be available in future versions.
+              German guideline for hygrothermal simulations in heritage buildings.
+              Standard climate parameters are applied automatically.
             </p>
           </div>
         )}
       </div>
 
-      {/* Preview Chart */}
-      <div className="space-y-sm">
-        <h3 className="text-sm font-semibold uppercase text-greydark">Typical Annual Pattern</h3>
-        <div className="border border-greylight rounded p-md bg-white">
-          <ResponsiveContainer width="100%" height={250}>
-            <LineChart data={previewData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#D9D8CD" />
-              <XAxis
-                dataKey="month"
-                stroke="#5E5A58"
-              />
-              <YAxis
-                yAxisId="left"
-                label={{ value: 'Temperature (°C)', angle: -90, position: 'insideLeft' }}
-                stroke="#C04343"
-              />
-              <YAxis
-                yAxisId="right"
-                orientation="right"
-                label={{ value: 'Relative Humidity (%)', angle: 90, position: 'insideRight' }}
-                stroke="#4597BF"
-              />
-              <Tooltip />
-              <Legend />
-              <Line
-                yAxisId="left"
-                type="monotone"
-                dataKey="temperature"
-                stroke="#C04343"
-                strokeWidth={2}
-                name="Temperature (°C)"
-              />
-              <Line
-                yAxisId="right"
-                type="monotone"
-                dataKey="humidity"
-                stroke="#4597BF"
-                strokeWidth={2}
-                name="Humidity (%)"
-              />
-            </LineChart>
-          </ResponsiveContainer>
-          <p className="text-xs text-greydark text-center mt-sm italic">
-            Preview shows typical pattern for selected standard and parameters
-          </p>
+      {/* Preview Chart - Larger size */}
+      {(standardData.standard === 'ASHRAE-160' || standardData.standard === 'ISO-13788') && (
+        <div className="space-y-sm mt-lg">
+          <h3 className="text-sm font-semibold uppercase text-greydark">Preview: Typical Annual Pattern</h3>
+          <div className="border border-greylight rounded p-md bg-white">
+            <ResponsiveContainer width="100%" height={400}>
+              <LineChart data={previewData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#D9D8CD" />
+                <XAxis dataKey="month" stroke="#5E5A58" />
+                <YAxis
+                  yAxisId="left"
+                  label={{ value: 'Temperature (°C)', angle: -90, position: 'insideLeft' }}
+                  stroke="#C04343"
+                />
+                <YAxis
+                  yAxisId="right"
+                  orientation="right"
+                  label={{ value: 'Relative Humidity (%)', angle: 90, position: 'insideRight' }}
+                  stroke="#4597BF"
+                />
+                <Tooltip />
+                <Legend />
+                <Line
+                  yAxisId="left"
+                  type="monotone"
+                  dataKey="temperature"
+                  stroke="#C04343"
+                  strokeWidth={2}
+                  name="Temperature (°C)"
+                />
+                <Line
+                  yAxisId="right"
+                  type="monotone"
+                  dataKey="humidity"
+                  stroke="#4597BF"
+                  strokeWidth={2}
+                  name="Humidity (%)"
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

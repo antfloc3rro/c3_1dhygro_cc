@@ -1,14 +1,47 @@
 import { useState } from 'react';
 import { Input } from '../../../../components/ui/Input';
 import { Label } from '../../../../components/ui/Label';
-import { Slider } from '../../../../components/ui/Slider';
-import { Switch } from '../../../../components/ui/Switch';
+import { Select } from '../../../../components/ui/Select';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { SineCurveData } from '../../types';
 
 interface SineCurveViewProps {
   value: SineCurveData;
   onChange: (data: SineCurveData) => void;
+}
+
+// Helper to convert date string like "Jun/03" to day of year
+function dateToDayOfYear(dateStr: string): number {
+  const [monthStr, dayStr] = dateStr.split('/');
+  const monthMap: { [key: string]: number } = {
+    Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5,
+    Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11
+  };
+  const month = monthMap[monthStr] || 0;
+  const day = parseInt(dayStr) || 1;
+
+  const daysInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  let dayOfYear = day;
+  for (let i = 0; i < month; i++) {
+    dayOfYear += daysInMonth[i];
+  }
+  return dayOfYear;
+}
+
+// Helper to convert day of year to date string
+function dayOfYearToDate(day: number): string {
+  const daysInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+  let remaining = day;
+  let month = 0;
+
+  while (remaining > daysInMonth[month] && month < 11) {
+    remaining -= daysInMonth[month];
+    month++;
+  }
+
+  return `${monthNames[month]}/${remaining.toString().padStart(2, '0')}`;
 }
 
 export function SineCurveView({ value, onChange }: SineCurveViewProps) {
@@ -23,22 +56,25 @@ export function SineCurveView({ value, onChange }: SineCurveViewProps) {
   // Generate preview data for the chart (365 days)
   const generateChartData = () => {
     const data = [];
-    for (let day = 0; day < 365; day += 7) { // Weekly points for performance
-      const tempRadians = ((day + sineCurve.temperature.phaseShift) / 365) * 2 * Math.PI;
-      const humidityRadians = sineCurve.inverseCorrelation
-        ? ((day + sineCurve.humidity.phaseShift + 182.5) / 365) * 2 * Math.PI // 180° phase shift
-        : ((day + sineCurve.humidity.phaseShift) / 365) * 2 * Math.PI;
+    const tempDayMax = dateToDayOfYear(sineCurve.temperature.dayOfMaximum);
+    const humidityDayMax = dateToDayOfYear(sineCurve.humidity.dayOfMaximum);
+
+    for (let day = 1; day <= 365; day += 7) { // Weekly points for performance
+      // Phase shift is calculated from day of maximum (max occurs at phase = π/2)
+      // So phase shift in radians = ((dayOfMax - day) / 365) * 2π
+      const tempPhase = ((day - tempDayMax) / 365) * 2 * Math.PI + Math.PI / 2;
+      const humidityPhase = ((day - humidityDayMax) / 365) * 2 * Math.PI + Math.PI / 2;
 
       const temperature = sineCurve.temperature.mean +
-        sineCurve.temperature.amplitude * Math.sin(tempRadians);
+        sineCurve.temperature.amplitude * Math.sin(tempPhase);
 
       const humidity = sineCurve.humidity.mean +
-        sineCurve.humidity.amplitude * Math.sin(humidityRadians);
+        sineCurve.humidity.amplitude * Math.sin(humidityPhase);
 
       data.push({
         day,
         temperature: parseFloat(temperature.toFixed(1)),
-        humidity: parseFloat(humidity.toFixed(1)),
+        humidity: parseFloat(Math.max(0, Math.min(100, humidity)).toFixed(1)),
       });
     }
     return data;
@@ -52,14 +88,29 @@ export function SineCurveView({ value, onChange }: SineCurveViewProps) {
   const humidityMax = Math.min(100, sineCurve.humidity.mean + sineCurve.humidity.amplitude);
 
   return (
-    <div className="space-y-lg">
+    <div className="space-y-lg max-w-5xl mx-auto">
+      {/* Curve Selection */}
+      <div className="space-y-md">
+        <Select
+          label="Curve Selection"
+          value={sineCurve.curveSelection || 'Indoor Condition, Medium Moisture Load'}
+          onChange={(value) => handleChange({ curveSelection: value })}
+          options={[
+            { value: 'Indoor Condition, Low Moisture Load', label: 'Indoor Condition, Low Moisture Load' },
+            { value: 'Indoor Condition, Medium Moisture Load', label: 'Indoor Condition, Medium Moisture Load' },
+            { value: 'Indoor Condition, High Moisture Load', label: 'Indoor Condition, High Moisture Load' },
+            { value: 'Custom', label: 'Custom' },
+          ]}
+        />
+      </div>
+
       {/* Temperature Settings */}
       <div className="space-y-md">
-        <h3 className="text-sm font-semibold uppercase text-greydark">Temperature Settings</h3>
+        <h3 className="text-sm font-semibold uppercase text-greydark">Temperature</h3>
 
         <div className="grid grid-cols-3 gap-md">
           <div>
-            <Label htmlFor="temp-mean">Mean Temperature (°C)</Label>
+            <Label htmlFor="temp-mean">Mean Value [°C]</Label>
             <Input
               id="temp-mean"
               type="number"
@@ -74,7 +125,7 @@ export function SineCurveView({ value, onChange }: SineCurveViewProps) {
           </div>
 
           <div>
-            <Label htmlFor="temp-amplitude">Amplitude (°C)</Label>
+            <Label htmlFor="temp-amplitude">Amplitude [K]</Label>
             <Input
               id="temp-amplitude"
               type="number"
@@ -89,17 +140,19 @@ export function SineCurveView({ value, onChange }: SineCurveViewProps) {
           </div>
 
           <div>
-            <Label htmlFor="temp-phase">Phase Shift (days)</Label>
+            <Label htmlFor="temp-day-max">Day of Maximum</Label>
             <Input
-              id="temp-phase"
-              type="number"
-              value={sineCurve.temperature.phaseShift}
+              id="temp-day-max"
+              type="text"
+              value={sineCurve.temperature.dayOfMaximum}
               onChange={(e) => handleChange({
-                temperature: { ...sineCurve.temperature, phaseShift: parseInt(e.target.value) || 0 }
+                temperature: { ...sineCurve.temperature, dayOfMaximum: e.target.value }
               })}
-              min="0"
-              max="365"
+              placeholder="Jun/03"
             />
+            <p className="text-xs text-greydark mt-xs">
+              Format: Mon/DD (e.g., Jun/03)
+            </p>
           </div>
         </div>
 
@@ -110,11 +163,11 @@ export function SineCurveView({ value, onChange }: SineCurveViewProps) {
 
       {/* Humidity Settings */}
       <div className="space-y-md">
-        <h3 className="text-sm font-semibold uppercase text-greydark">Humidity Settings</h3>
+        <h3 className="text-sm font-semibold uppercase text-greydark">Relative Humidity</h3>
 
         <div className="grid grid-cols-3 gap-md">
           <div>
-            <Label htmlFor="humidity-mean">Mean Relative Humidity (%)</Label>
+            <Label htmlFor="humidity-mean">Mean Value [%]</Label>
             <Input
               id="humidity-mean"
               type="number"
@@ -129,7 +182,7 @@ export function SineCurveView({ value, onChange }: SineCurveViewProps) {
           </div>
 
           <div>
-            <Label htmlFor="humidity-amplitude">Amplitude (%)</Label>
+            <Label htmlFor="humidity-amplitude">Amplitude [%]</Label>
             <Input
               id="humidity-amplitude"
               type="number"
@@ -144,17 +197,19 @@ export function SineCurveView({ value, onChange }: SineCurveViewProps) {
           </div>
 
           <div>
-            <Label htmlFor="humidity-phase">Phase Shift (days)</Label>
+            <Label htmlFor="humidity-day-max">Day of Maximum</Label>
             <Input
-              id="humidity-phase"
-              type="number"
-              value={sineCurve.humidity.phaseShift}
+              id="humidity-day-max"
+              type="text"
+              value={sineCurve.humidity.dayOfMaximum}
               onChange={(e) => handleChange({
-                humidity: { ...sineCurve.humidity, phaseShift: parseInt(e.target.value) || 0 }
+                humidity: { ...sineCurve.humidity, dayOfMaximum: e.target.value }
               })}
-              min="0"
-              max="365"
+              placeholder="Aug/16"
             />
+            <p className="text-xs text-greydark mt-xs">
+              Format: Mon/DD (e.g., Aug/16)
+            </p>
           </div>
         </div>
 
@@ -163,26 +218,11 @@ export function SineCurveView({ value, onChange }: SineCurveViewProps) {
         </div>
       </div>
 
-      {/* Correlation */}
-      <div className="flex items-center gap-sm p-md border border-greylight rounded">
-        <Switch
-          id="inverse-correlation"
-          checked={sineCurve.inverseCorrelation}
-          onCheckedChange={(checked) => handleChange({ inverseCorrelation: checked })}
-        />
-        <Label htmlFor="inverse-correlation" className="cursor-pointer">
-          Inverse correlation between temperature and humidity
-        </Label>
-      </div>
-      <p className="text-xs text-greydark -mt-sm">
-        When enabled, high temperatures correspond to low humidity (typical for seasonal climates)
-      </p>
-
-      {/* Live Preview Chart */}
-      <div className="space-y-sm">
+      {/* Live Preview Chart - Larger size */}
+      <div className="space-y-sm mt-lg">
         <h3 className="text-sm font-semibold uppercase text-greydark">Live Preview</h3>
         <div className="border border-greylight rounded p-md bg-white">
-          <ResponsiveContainer width="100%" height={300}>
+          <ResponsiveContainer width="100%" height={400}>
             <LineChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#D9D8CD" />
               <XAxis

@@ -44,32 +44,41 @@ export interface ClimateData {
 export interface StandardClimateData {
   standard: 'ASHRAE-160' | 'EN-15026' | 'ISO-13788' | 'WTA-6-2';
   parameters: {
-    // ASHRAE 160
-    climateZone?: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
-    moistureLoad?: 'low' | 'medium' | 'high';
-    temperatureLevel?: 'low' | 'normal' | 'high';
-    // EN 15026
-    buildingType?: 'residential' | 'office' | 'industrial';
-    moistureGenRate?: number; // g/(m³·s)
-    airChangeRate?: number; // 1/h
-    // ISO 13788
-    internalTemp?: number; // °C
+    // EN 15026 - Just moisture load
+    moistureLoad?: 'low' | 'medium' | 'medium-high' | 'high' | 'very-high';
+
+    // ISO 13788 - Mean temperature and humidity class
+    meanTemperature?: number; // °C
     humidityClass?: 1 | 2 | 3 | 4 | 5;
+
+    // ASHRAE 160 - All detailed parameters
+    acType?: 'none' | 'ac-only' | 'ac-with-dehumidification';
+    floatingTempShift?: number; // °C
+    heatingSetpoint?: number; // °C
+    coolingSetpoint?: number; // °C
+    rhSetpoint?: number; // %
+    numBedrooms?: number;
+    jettedTub?: boolean;
+    userDefinedMoistureGen?: boolean;
+    moistureGenRate?: number; // kg/s
+    constructionAirtightness?: 'leaky' | 'standard' | 'tight';
+    airExchangeRate?: number; // 1/h
+    buildingVolume?: number; // m³
   };
 }
 
 export interface SineCurveData {
+  curveSelection?: string; // e.g., "Indoor Condition, Medium Moisture Load"
   temperature: {
     mean: number; // °C
-    amplitude: number; // °C
-    phaseShift: number; // days (0-365)
+    amplitude: number; // K
+    dayOfMaximum: string; // Date string (e.g., "Jun/03")
   };
   humidity: {
     mean: number; // %
     amplitude: number; // %
-    phaseShift: number; // days (0-365)
+    dayOfMaximum: string; // Date string (e.g., "Aug/16")
   };
-  inverseCorrelation: boolean;
 }
 
 export interface AnnualStatistics {

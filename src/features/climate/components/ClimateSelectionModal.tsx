@@ -32,25 +32,23 @@ export function ClimateSelectionModal({
 
   // Data for each climate type
   const [sineCurveData, setSineCurveData] = useState<SineCurveData>({
+    curveSelection: 'Indoor Condition, Medium Moisture Load',
     temperature: {
-      mean: 10,
-      amplitude: 10,
-      phaseShift: 0,
+      mean: 21,
+      amplitude: 1,
+      dayOfMaximum: 'Jun/03',
     },
     humidity: {
-      mean: 70,
-      amplitude: 15,
-      phaseShift: 0,
+      mean: 50,
+      amplitude: 10,
+      dayOfMaximum: 'Aug/16',
     },
-    inverseCorrelation: false,
   });
 
   const [standardData, setStandardData] = useState<StandardClimateData>({
-    standard: 'ASHRAE-160',
+    standard: 'EN-15026',
     parameters: {
-      climateZone: 4,
       moistureLoad: 'medium',
-      temperatureLevel: 'normal',
     },
   });
 
@@ -135,15 +133,18 @@ export function ClimateSelectionModal({
     onClose();
   };
 
+  // Determine if right panel should be shown
+  const showRightPanel = climateType === 'weather-station' || climateType === 'upload';
+
   return (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
       title={view === 'selection' ? 'Select Climate Data' : 'Climate Data Viewer'}
-      size="2xl"
+      size="full"
     >
       {view === 'selection' ? (
-        /* Selection View - Three Column Layout */
+        /* Selection View - Three Column Layout (or Two Column if no right panel) */
         <div className="flex h-[calc(85vh-120px)]">
           {/* Left Column: Climate Type Selector */}
           <ClimateTypeSelector
@@ -182,16 +183,18 @@ export function ClimateSelectionModal({
             )}
           </div>
 
-          {/* Right Column: Statistics Panel */}
-          <ClimateStatisticsPanel
-            climateType={climateType}
-            application={application}
-            sineCurveData={climateType === 'sine-curve' ? sineCurveData : undefined}
-            heatTransferResistance={heatTransferResistance}
-            rainCoefficient={rainCoefficient}
-            onHeatTransferResistanceChange={setHeatTransferResistance}
-            onRainCoefficientChange={setRainCoefficient}
-          />
+          {/* Right Column: Statistics Panel - Only show for weather-station and upload */}
+          {showRightPanel && (
+            <ClimateStatisticsPanel
+              climateType={climateType}
+              application={application}
+              sineCurveData={climateType === 'sine-curve' ? sineCurveData : undefined}
+              heatTransferResistance={heatTransferResistance}
+              rainCoefficient={rainCoefficient}
+              onHeatTransferResistanceChange={setHeatTransferResistance}
+              onRainCoefficientChange={setRainCoefficient}
+            />
+          )}
         </div>
       ) : (
         /* Viewer View - Full Width Climate Data Visualization */

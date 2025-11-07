@@ -101,6 +101,7 @@ export function ModalManager() {
             setInteriorClimate(climateData);
           }
         }}
+        initialApplication={climateActiveSide === 'exterior' ? 'outdoor' : 'indoor'}
         presets={mockClimatePresets}
       />
 
