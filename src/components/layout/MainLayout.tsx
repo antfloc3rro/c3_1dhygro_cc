@@ -5,7 +5,7 @@ import { EnhancedHeader } from './EnhancedHeader'
 import { StatusBar } from './StatusBar'
 import { LeftPanel } from '@/components/panels/LeftPanel'
 import { InspectorPanel } from '@/components/panels/InspectorPanel'
-import { AssemblyVisual, DataTable, PerformanceSummary } from '@/features/assembly/components'
+import { AssemblyVisual, DataTable, PerformanceSummary, GridDiscretization } from '@/features/assembly/components'
 import { useAppStore } from '@/store/index'
 import { useAutoSave, useRestoreAutoSave } from '@/hooks/useAutoSave'
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
@@ -45,7 +45,31 @@ export function MainLayout() {
   const totalThickness = useAppStore((state) => state.assembly.totalThickness)
   const uValue = useAppStore((state) => state.assembly.uValue)
   const simulationStatus = useAppStore((state) => state.simulation.status)
+  const selectedLayerId = useAppStore((state) => state.ui.selectedLayerId)
   const { openModal, selectLayer } = useAppStore((state) => state.actions)
+
+  // Get the selected layer for grid discretization
+  const selectedLayer = layers.find((l) => l.id === selectedLayerId)
+
+  // Handle grid cell click - opens monitor modal with position set to that cell
+  const handleGridCellClick = (cellIndex: number) => {
+    if (!selectedLayer) return
+
+    // Calculate position in mm: cell position from exterior surface
+    // Each cell represents a fraction of the layer thickness
+    const gridCells = typeof selectedLayer.gridCells === 'number' ? selectedLayer.gridCells : 10
+    const cellFraction = (cellIndex + 0.5) / gridCells // Center of the cell (0-1 within layer)
+
+    // Calculate position from exterior surface of entire assembly
+    const layerIndex = layers.findIndex((l) => l.id === selectedLayerId)
+    const positionBeforeLayerMm = layers.slice(0, layerIndex).reduce((sum, l) => sum + l.thickness * 1000, 0)
+    const positionInLayerMm = cellFraction * selectedLayer.thickness * 1000
+    const totalPositionMm = positionBeforeLayerMm + positionInLayerMm
+
+    // TODO: Pass this position to the monitor modal
+    // For now, just open the modal
+    openModal('monitor-config')
+  }
 
   const tabs: TabItem[] = [
     {
@@ -173,14 +197,22 @@ export function MainLayout() {
 
               {/* Visual Assembly */}
               {layers.length > 0 ? (
-                <AssemblyVisual
-                  layers={layers}
-                  surfaces={surfaces}
-                  monitors={monitors}
-                  totalThickness={totalThickness}
-                  gridVisible={gridVisible}
-                  onToggleGrid={() => setGridVisible(!gridVisible)}
-                />
+                <>
+                  <AssemblyVisual
+                    layers={layers}
+                    surfaces={surfaces}
+                    monitors={monitors}
+                    totalThickness={totalThickness}
+                  />
+
+                  {/* Grid Discretization - shows when grid is visible and layer is selected */}
+                  {gridVisible && selectedLayer && (
+                    <GridDiscretization
+                      layer={selectedLayer}
+                      onCellClick={handleGridCellClick}
+                    />
+                  )}
+                </>
               ) : (
                 <div className="bg-white border border-dashed border-neutral-300 rounded-lg p-12 text-center">
                   <p className="text-sm mb-4" style={{ color: '#5E5A58' }}>

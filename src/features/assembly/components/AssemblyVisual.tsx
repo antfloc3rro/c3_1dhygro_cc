@@ -12,8 +12,6 @@ export interface AssemblyVisualProps {
   }
   monitors: Monitor[]
   totalThickness: number
-  gridVisible?: boolean
-  onToggleGrid?: () => void
 }
 
 /**
@@ -36,8 +34,6 @@ export function AssemblyVisual({
   surfaces,
   monitors,
   totalThickness,
-  gridVisible = false,
-  onToggleGrid,
 }: AssemblyVisualProps) {
   const selectedLayerId = useAppStore((state) => state.ui.selectedLayerId)
   const selectedSurfaceId = useAppStore((state) => state.ui.selectedSurfaceId)
@@ -170,32 +166,6 @@ export function AssemblyVisual({
                 </div>
               )
             })}
-
-            {/* Grid Overlay */}
-            {gridVisible && (
-              <div
-                className="absolute inset-0 pointer-events-none z-10"
-                style={{
-                  backgroundImage: `
-                    repeating-linear-gradient(
-                      0deg,
-                      rgba(69, 151, 191, 0.3) 0px,
-                      rgba(69, 151, 191, 0.3) 1px,
-                      transparent 1px,
-                      transparent 20px
-                    ),
-                    repeating-linear-gradient(
-                      90deg,
-                      rgba(69, 151, 191, 0.3) 0px,
-                      rgba(69, 151, 191, 0.3) 1px,
-                      transparent 1px,
-                      transparent 20px
-                    )
-                  `,
-                  backgroundSize: '20px 20px',
-                }}
-              />
-            )}
 
             {/* Monitors overlay */}
             {monitorPositions.map((monPos) => {
