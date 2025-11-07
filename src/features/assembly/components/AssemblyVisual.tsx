@@ -35,10 +35,13 @@ export function AssemblyVisual({
   monitors,
   totalThickness,
 }: AssemblyVisualProps) {
+  const [draggedLayerIndex, setDraggedLayerIndex] = React.useState<number | null>(null)
+  const [dragOverIndex, setDragOverIndex] = React.useState<number | null>(null)
+
   const selectedLayerId = useAppStore((state) => state.ui.selectedLayerId)
   const selectedSurfaceId = useAppStore((state) => state.ui.selectedSurfaceId)
   const selectedMonitorId = useAppStore((state) => state.ui.selectedMonitorId)
-  const { selectLayer, selectSurface, selectMonitor } = useAppStore((state) => state.actions)
+  const { selectLayer, selectSurface, selectMonitor, reorderLayers } = useAppStore((state) => state.actions)
 
   // Calculate layer positions for proportional widths
   const layerPositions = useMemo(() => {
@@ -127,15 +130,20 @@ export function AssemblyVisual({
             {layers.map((layer, index) => {
               const position = layerPositions[index]
               const isSelected = selectedLayerId === layer.id
+              const isDragging = draggedLayerIndex === index
+              const isDragOver = dragOverIndex === index
               const color = getMaterialColor(layer.material.id)
 
               return (
                 <div
                   key={layer.id}
+                  draggable
                   className={cn(
-                    'relative cursor-pointer transition-all duration-200',
+                    'relative cursor-move transition-all duration-200',
                     'hover:brightness-110',
-                    isSelected && 'ring-[3px] ring-inset ring-bluegreen'
+                    isSelected && 'ring-[3px] ring-inset ring-bluegreen',
+                    isDragging && 'opacity-50',
+                    isDragOver && 'ring-2 ring-orange ring-inset'
                   )}
                   style={{
                     width: `${position.width}%`,
@@ -151,6 +159,32 @@ export function AssemblyVisual({
                     )`,
                   }}
                   onClick={() => selectLayer(layer.id)}
+                  onDragStart={(e) => {
+                    setDraggedLayerIndex(index)
+                    e.dataTransfer.effectAllowed = 'move'
+                  }}
+                  onDragOver={(e) => {
+                    e.preventDefault()
+                    e.dataTransfer.dropEffect = 'move'
+                    if (draggedLayerIndex !== null && draggedLayerIndex !== index) {
+                      setDragOverIndex(index)
+                    }
+                  }}
+                  onDragLeave={() => {
+                    setDragOverIndex(null)
+                  }}
+                  onDrop={(e) => {
+                    e.preventDefault()
+                    if (draggedLayerIndex !== null && draggedLayerIndex !== index) {
+                      reorderLayers(draggedLayerIndex, index)
+                    }
+                    setDraggedLayerIndex(null)
+                    setDragOverIndex(null)
+                  }}
+                  onDragEnd={() => {
+                    setDraggedLayerIndex(null)
+                    setDragOverIndex(null)
+                  }}
                 >
                   {/* Thickness label above */}
                   <div
