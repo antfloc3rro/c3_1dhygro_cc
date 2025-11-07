@@ -40,9 +40,21 @@ export function MaterialDatabaseModal({
   // Local state for current selection (not persisted)
   const [selectedMaterial, setSelectedMaterial] = useState<Material | null>(null);
 
+  // Debug logging
+  useEffect(() => {
+    if (isOpen) {
+      console.log('🔍 MaterialDatabaseModal opened');
+      console.log('  Categories:', categories.length);
+      console.log('  Subcategories:', subcategories.length);
+      console.log('  Materials:', materials.length);
+      console.log('  Search query:', searchQuery);
+    }
+  }, [isOpen, categories.length, subcategories.length, materials.length, searchQuery]);
+
   // Clear search query when modal opens (fresh start each time)
   useEffect(() => {
     if (isOpen && searchQuery) {
+      console.log('🧹 Clearing search query:', searchQuery);
       setSearchQuery('');
     }
   }, [isOpen]); // eslint-disable-line react-hooks/exhaustive-deps

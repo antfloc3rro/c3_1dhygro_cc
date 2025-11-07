@@ -99,52 +99,31 @@ export function useAutoSave(enabled: boolean = true, debounceMs: number = 1000) 
 
 /**
  * Hook to restore project from auto-save on app load
+ *
+ * NOTE: This hook is currently DISABLED because Zustand persist middleware
+ * already handles state restoration from localStorage. Using this would
+ * cause duplicate layers and other issues.
+ *
+ * The auto-save data is still being written for potential future use
+ * (e.g., cloud sync, export, etc.) but restoration is handled by Zustand.
  */
 export function useRestoreAutoSave() {
-  const setProject = useAppStore((state) => state.actions.setProject);
-  const addLayer = useAppStore((state) => state.actions.addLayer);
-  const setClimate = useAppStore((state) => state.actions.setClimate);
   const { showToast } = useToast();
 
   useEffect(() => {
+    // Disabled - Zustand persist middleware handles restoration
+    // Just check if there's saved data and show a notification
     try {
       const savedData = localStorage.getItem('wufi-cloud-project-autosave');
-      if (!savedData) return;
+      if (savedData) {
+        const parsed = JSON.parse(savedData);
+        const savedAt = parsed.savedAt ? new Date(parsed.savedAt) : null;
 
-      const parsed = JSON.parse(savedData);
-
-      // Restore assembly layers
-      if (parsed.assembly?.layers) {
-        parsed.assembly.layers.forEach((layer: any) => {
-          addLayer(layer);
-        });
+        console.log('[AutoSave] Project data available from', savedAt);
+        // Note: Actual restoration is handled by Zustand persist middleware
       }
-
-      // Restore project data
-      if (parsed.project?.currentProject) {
-        setProject(parsed.project.currentProject);
-      }
-
-      // Restore climate
-      if (parsed.climate?.climate) {
-        setClimate(parsed.climate.climate);
-      }
-
-      const savedAt = parsed.savedAt ? new Date(parsed.savedAt) : null;
-      const timeAgo = savedAt
-        ? Math.round((Date.now() - savedAt.getTime()) / 1000 / 60)
-        : null;
-
-      showToast(
-        'info',
-        'Project restored',
-        `Restored from ${timeAgo ? `${timeAgo} minutes ago` : 'auto-save'}`,
-        3000
-      );
-
-      console.log('[AutoSave] Project restored from auto-save');
     } catch (error) {
-      console.error('[AutoSave] Failed to restore project:', error);
+      console.error('[AutoSave] Error reading auto-save data:', error);
     }
-  }, [addLayer, setProject, setClimate, showToast]);
+  }, [showToast]);
 }
