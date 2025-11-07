@@ -2,11 +2,12 @@ import { useState, useMemo } from 'react';
 import { Modal } from '../../../components/ui/Modal';
 import { Button } from '../../../components/ui/Button';
 import { Check, X } from 'lucide-react';
-import { ClimateData, ClimateType, ClimateApplication, SineCurveData, StandardClimateData, EPWData, WACData } from '../types';
+import { ClimateData, ClimateType, ClimateApplication, SineCurveData, StandardClimateData, EPWData, WACData, LocationSearchResult } from '../types';
 import { ClimateTypeSelector } from './ClimateTypeSelector';
 import { ClimateStatisticsPanel } from './ClimateStatisticsPanel';
 import { SineCurveView } from './views/SineCurveView';
 import { StandardConditionsView } from './views/StandardConditionsView';
+import { WeatherStationView } from './views/WeatherStationView';
 import { cn } from '../../../lib/utils';
 
 interface ClimateSelectionModalProps {
@@ -58,6 +59,7 @@ export function ClimateSelectionModal({
   const [rainCoefficient, setRainCoefficient] = useState(0.7);
 
   const [uploadedFile, setUploadedFile] = useState<EPWData | WACData | null>(null);
+  const [selectedLocation, setSelectedLocation] = useState<LocationSearchResult | null>(null);
 
   // Determine if we can apply the current selection
   const canApply = useMemo(() => {
@@ -67,13 +69,13 @@ export function ClimateSelectionModal({
       case 'standard':
         return true; // Always valid once standard selected
       case 'weather-station':
-        return false; // TODO: implement
+        return selectedLocation !== null;
       case 'upload':
         return uploadedFile !== null;
       default:
         return false;
     }
-  }, [climateType, uploadedFile]);
+  }, [climateType, uploadedFile, selectedLocation]);
 
   const handleApply = () => {
     // Create ClimateData based on selected type
@@ -126,7 +128,38 @@ export function ClimateSelectionModal({
         };
         break;
 
-      // TODO: Implement other climate types
+      case 'weather-station':
+        if (!selectedLocation) return;
+        climateData = {
+          id: `location-${Date.now()}`,
+          name: `${selectedLocation.city}, ${selectedLocation.country}`,
+          type: 'location',
+          source: selectedLocation.availableDatasets[0]?.source || 'Weather Station',
+          location: {
+            city: selectedLocation.city,
+            country: selectedLocation.country,
+            latitude: selectedLocation.latitude,
+            longitude: selectedLocation.longitude,
+            elevation: selectedLocation.elevation,
+            timezone: 'UTC',
+          },
+          variables: {
+            temperature: true,
+            relativeHumidity: true,
+            precipitation: true,
+            solarRadiation: true,
+            windSpeed: true,
+            windDirection: true,
+            pressure: true,
+          },
+          surfaceParameters: application === 'outdoor' ? {
+            heatTransferResistance,
+            rainCoefficient,
+          } : undefined,
+        };
+        break;
+
+      // TODO: Implement upload climate type
       default:
         return;
     }
@@ -157,18 +190,16 @@ export function ClimateSelectionModal({
           />
 
           {/* Center Column: Input Area */}
-          <div className="flex-1 p-lg overflow-y-auto bg-greylight/5">
+          <div className={cn(
+            "flex-1",
+            climateType === 'weather-station' ? '' : 'p-lg overflow-y-auto bg-greylight/5'
+          )}>
             {climateType === 'sine-curve' && (
               <SineCurveView value={sineCurveData} onChange={setSineCurveData} />
             )}
 
             {climateType === 'weather-station' && (
-              <div className="flex items-center justify-center h-full">
-                <div className="text-center text-greydark">
-                  <p className="text-sm">Weather Station view coming soon</p>
-                  <p className="text-xs mt-sm">Will include map and location search</p>
-                </div>
-              </div>
+              <WeatherStationView onSelect={setSelectedLocation} />
             )}
 
             {climateType === 'standard' && (
@@ -176,7 +207,7 @@ export function ClimateSelectionModal({
             )}
 
             {climateType === 'upload' && (
-              <div className="flex items-center justify-center h-full">
+              <div className="flex items-center justify-center h-full p-lg">
                 <div className="text-center text-greydark">
                   <p className="text-sm">Upload File view coming soon</p>
                   <p className="text-xs mt-sm">EPW and WAC file support</p>
