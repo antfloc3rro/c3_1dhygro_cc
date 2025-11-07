@@ -14,6 +14,7 @@ interface ClimateSelectionModalProps {
   onClose: () => void;
   onSelect: (climate: ClimateData) => void;
   initialApplication?: ClimateApplication;
+  initialClimateType?: ClimateType;
   presets?: any[]; // For backward compatibility with old modal interface
 }
 
@@ -24,10 +25,11 @@ export function ClimateSelectionModal({
   onClose,
   onSelect,
   initialApplication = 'outdoor',
+  initialClimateType = 'weather-station',
 }: ClimateSelectionModalProps) {
   // Modal state
   const [view, setView] = useState<ModalView>('selection');
-  const [climateType, setClimateType] = useState<ClimateType>('sine-curve');
+  const [climateType, setClimateType] = useState<ClimateType>(initialClimateType);
   const [application, setApplication] = useState<ClimateApplication>(initialApplication);
 
   // Data for each climate type

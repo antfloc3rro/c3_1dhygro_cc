@@ -102,6 +102,7 @@ export function ModalManager() {
           }
         }}
         initialApplication={climateActiveSide === 'exterior' ? 'outdoor' : 'indoor'}
+        initialClimateType={climateActiveSide === 'exterior' ? 'weather-station' : 'standard'}
         presets={mockClimatePresets}
       />
 
