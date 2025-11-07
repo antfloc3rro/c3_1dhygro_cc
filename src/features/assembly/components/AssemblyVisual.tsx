@@ -88,9 +88,9 @@ export function AssemblyVisual({
   return (
     <div className="w-full bg-white border border-neutral-200 rounded-lg p-4">
       {/* Container for visual assembly */}
-      <div className="relative" style={{ minHeight: '300px' }}>
-        {/* Surface labels */}
-        <div className="flex justify-between mb-2">
+      <div className="relative" style={{ minHeight: '300px', paddingTop: '32px' }}>
+        {/* Surface labels - positioned absolutely to avoid overlap with thickness */}
+        <div className="absolute top-0 left-0 right-0 flex justify-between">
           <span className="text-xs font-medium" style={{ color: '#5E5A58' }}>
             Exterior (Left Side)
           </span>
@@ -100,7 +100,7 @@ export function AssemblyVisual({
         </div>
 
         {/* Main assembly visualization */}
-        <div className="relative flex items-stretch" style={{ height: '200px' }}>
+        <div className="relative flex items-stretch" style={{ height: '200px', marginTop: '8px' }}>
           {/* Exterior Surface */}
           <div
             className={cn(
@@ -223,26 +223,32 @@ export function AssemblyVisual({
           />
         </div>
 
-        {/* Material names below */}
-        <div className="flex mt-4">
+        {/* Material names below - positioned absolutely to align perfectly with layers */}
+        <div className="relative flex mt-4" style={{ height: '40px' }}>
           <div style={{ width: '4px', marginRight: '2px' }} /> {/* Spacer for exterior surface */}
-          <div className="flex-1 flex">
+          <div className="flex-1 flex relative">
             {layers.map((layer, index) => {
               const position = layerPositions[index]
 
               return (
                 <div
                   key={layer.id}
-                  className="text-center"
+                  className="text-center overflow-hidden"
                   style={{
                     width: `${position.width}%`,
                     marginRight: index < layers.length - 1 ? '2px' : '0',
+                    paddingLeft: '2px', // Account for left border
+                    paddingRight: '2px', // Account for right border
                   }}
                 >
-                  <div className="text-xs font-bold truncate px-1" style={{ color: '#33302F' }}>
+                  <div
+                    className="text-xs font-semibold truncate px-1"
+                    style={{ color: '#33302F' }}
+                    title={layer.name || layer.material.name}
+                  >
                     {layer.name || layer.material.name}
                   </div>
-                  <div className="text-xs font-mono" style={{ color: '#5E5A58' }}>
+                  <div className="text-[10px] font-mono truncate" style={{ color: '#5E5A58' }}>
                     λ: {layer.material.thermalConductivity.toFixed(3)} W/mK
                   </div>
                 </div>
