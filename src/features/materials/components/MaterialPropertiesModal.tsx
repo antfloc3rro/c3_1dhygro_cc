@@ -4,7 +4,8 @@ import { Input } from '../../../components/ui/Input'
 import { NumberInput } from '../../../components/ui/NumberInput'
 import { Collapsible } from '../../../components/ui/Collapsible'
 import { AlertCircle, Info } from 'lucide-react'
-import { Material } from '../../../types'
+import { Material, MaterialFunction } from '../../../types'
+import { MaterialFunctionEditor } from './MaterialFunctionEditor'
 
 interface MaterialPropertiesModalProps {
   isOpen: boolean
@@ -25,6 +26,12 @@ export function MaterialPropertiesModal({
   material,
   onSave,
 }: MaterialPropertiesModalProps) {
+  // Tab state
+  const [activeTab, setActiveTab] = useState<'basic' | 'functions'>('basic')
+  const [activeFunctionTab, setActiveFunctionTab] = useState<
+    'moistureStorage' | 'liquidTransport' | 'vaporDiffusion' | 'moistureDependentThermalConductivity'
+  >('moistureStorage')
+
   // Local state for editable properties
   const [name, setName] = useState(material.name)
   const [manufacturer, setManufacturer] = useState(material.manufacturer || '')
@@ -33,6 +40,9 @@ export function MaterialPropertiesModal({
   const [heatCapacity, setHeatCapacity] = useState(material.heatCapacity)
   const [porosity, setPorosity] = useState(material.porosity)
   const [vaporResistanceFactor, setVaporResistanceFactor] = useState(material.vaporResistanceFactor)
+
+  // Local state for hygrothermal functions
+  const [functions, setFunctions] = useState(material.functions || {})
 
   // Reset state when material changes
   useEffect(() => {
@@ -44,6 +54,8 @@ export function MaterialPropertiesModal({
       setHeatCapacity(material.heatCapacity)
       setPorosity(material.porosity)
       setVaporResistanceFactor(material.vaporResistanceFactor)
+      setFunctions(material.functions || {})
+      setActiveTab('basic')
     }
   }, [isOpen, material])
 
@@ -63,6 +75,7 @@ export function MaterialPropertiesModal({
   const handleClose = () => {
     if (isValid) {
       // Only save if something changed
+      const functionsChanged = JSON.stringify(functions) !== JSON.stringify(material.functions || {})
       const hasChanges =
         name !== material.name ||
         manufacturer !== (material.manufacturer || '') ||
@@ -70,7 +83,8 @@ export function MaterialPropertiesModal({
         bulkDensity !== material.bulkDensity ||
         heatCapacity !== material.heatCapacity ||
         porosity !== material.porosity ||
-        vaporResistanceFactor !== material.vaporResistanceFactor
+        vaporResistanceFactor !== material.vaporResistanceFactor ||
+        functionsChanged
 
       if (hasChanges) {
         onSave({
@@ -81,6 +95,7 @@ export function MaterialPropertiesModal({
           heatCapacity,
           porosity,
           vaporResistanceFactor,
+          functions: Object.keys(functions).length > 0 ? functions : undefined,
         })
       }
     }
@@ -92,19 +107,46 @@ export function MaterialPropertiesModal({
       isOpen={isOpen}
       onClose={handleClose}
       title="Edit Material Properties"
-      size="lg"
+      size="xl"
     >
+      {/* Tabs */}
+      <div className="flex border-b border-neutral-200 -mt-4 mb-4">
+        <button
+          className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+            activeTab === 'basic'
+              ? 'border-bluegreen text-bluegreen'
+              : 'border-transparent text-greydark hover:text-text'
+          }`}
+          onClick={() => setActiveTab('basic')}
+        >
+          Basic Properties
+        </button>
+        <button
+          className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+            activeTab === 'functions'
+              ? 'border-bluegreen text-bluegreen'
+              : 'border-transparent text-greydark hover:text-text'
+          }`}
+          onClick={() => setActiveTab('functions')}
+        >
+          Hygrothermal Functions
+        </button>
+      </div>
+
       <div className="space-y-md">
-        {/* Info Banner */}
-        <div className="bg-blue-50 border border-blue-200 rounded-md p-3 flex items-start gap-2">
-          <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-          <div className="text-sm text-blue-900">
-            <div className="font-medium">Power User Feature</div>
-            <div className="text-blue-700 mt-1">
-              Editing material properties creates a custom material. For standard materials, use "Select from Database" instead.
+        {/* Basic Properties Tab */}
+        {activeTab === 'basic' && (
+          <>
+            {/* Info Banner */}
+            <div className="bg-blue-50 border border-blue-200 rounded-md p-3 flex items-start gap-2">
+              <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+              <div className="text-sm text-blue-900">
+                <div className="font-medium">Power User Feature</div>
+                <div className="text-blue-700 mt-1">
+                  Editing material properties creates a custom material. For standard materials, use "Select from Database" instead.
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
 
         {/* Material Identification */}
         <Collapsible title="Material Identification" defaultExpanded={true}>
@@ -187,19 +229,82 @@ export function MaterialPropertiesModal({
           </div>
         </Collapsible>
 
-        {/* Validation Warning */}
-        {!isValid && (
-          <div className="border border-orange rounded p-md bg-orange/10 flex items-start gap-sm">
-            <AlertCircle className="w-5 h-5 text-orange flex-shrink-0 mt-0.5" />
-            <div className="text-sm">
-              <div className="font-medium">Invalid Properties</div>
-              <div className="text-greydark mt-1">
-                {!hasValidName && <div>• Material name is required</div>}
-                {!hasValidValues && <div>• All property values must be within valid ranges</div>}
-                <div className="mt-2">Close this modal without saving to discard changes.</div>
+            {/* Validation Warning */}
+            {!isValid && (
+              <div className="border border-orange rounded p-md bg-orange/10 flex items-start gap-sm">
+                <AlertCircle className="w-5 h-5 text-orange flex-shrink-0 mt-0.5" />
+                <div className="text-sm">
+                  <div className="font-medium">Invalid Properties</div>
+                  <div className="text-greydark mt-1">
+                    {!hasValidName && <div>• Material name is required</div>}
+                    {!hasValidValues && <div>• All property values must be within valid ranges</div>}
+                    <div className="mt-2">Close this modal without saving to discard changes.</div>
+                  </div>
+                </div>
               </div>
+            )}
+          </>
+        )}
+
+        {/* Hygrothermal Functions Tab */}
+        {activeTab === 'functions' && (
+          <>
+            {/* Function Sub-tabs */}
+            <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
+              <button
+                className={`px-3 py-2 text-xs font-medium rounded-md whitespace-nowrap ${
+                  activeFunctionTab === 'moistureStorage'
+                    ? 'bg-bluegreen text-white'
+                    : 'bg-neutral-100 text-greydark hover:bg-neutral-200'
+                }`}
+                onClick={() => setActiveFunctionTab('moistureStorage')}
+              >
+                Moisture Storage
+              </button>
+              <button
+                className={`px-3 py-2 text-xs font-medium rounded-md whitespace-nowrap ${
+                  activeFunctionTab === 'liquidTransport'
+                    ? 'bg-bluegreen text-white'
+                    : 'bg-neutral-100 text-greydark hover:bg-neutral-200'
+                }`}
+                onClick={() => setActiveFunctionTab('liquidTransport')}
+              >
+                Liquid Transport
+              </button>
+              <button
+                className={`px-3 py-2 text-xs font-medium rounded-md whitespace-nowrap ${
+                  activeFunctionTab === 'vaporDiffusion'
+                    ? 'bg-bluegreen text-white'
+                    : 'bg-neutral-100 text-greydark hover:bg-neutral-200'
+                }`}
+                onClick={() => setActiveFunctionTab('vaporDiffusion')}
+              >
+                Vapor Diffusion
+              </button>
+              <button
+                className={`px-3 py-2 text-xs font-medium rounded-md whitespace-nowrap ${
+                  activeFunctionTab === 'moistureDependentThermalConductivity'
+                    ? 'bg-bluegreen text-white'
+                    : 'bg-neutral-100 text-greydark hover:bg-neutral-200'
+                }`}
+                onClick={() => setActiveFunctionTab('moistureDependentThermalConductivity')}
+              >
+                Thermal Conductivity
+              </button>
             </div>
-          </div>
+
+            {/* Function Editor */}
+            <MaterialFunctionEditor
+              functionData={functions[activeFunctionTab]}
+              onChange={(functionData) => {
+                setFunctions({
+                  ...functions,
+                  [activeFunctionTab]: functionData,
+                })
+              }}
+              functionType={activeFunctionTab}
+            />
+          </>
         )}
       </div>
     </Modal>

@@ -1,4 +1,19 @@
 // Assembly and Component Types
+
+export interface MaterialFunctionDataPoint {
+  x: number;
+  y: number;
+}
+
+export interface MaterialFunction {
+  dataPoints: MaterialFunctionDataPoint[];
+  xLabel: string;
+  yLabel: string;
+  xUnit: string;
+  yUnit: string;
+  description?: string;
+}
+
 export interface Material {
   id: string;
   name: string;
@@ -6,8 +21,14 @@ export interface Material {
   bulkDensity: number; // kg/m³
   porosity: number; // m³/m³
   heatCapacity: number; // J/kgK
-  thermalConductivity: number; // W/mK
+  thermalConductivity: number; // W/mK (dry value)
   vaporResistanceFactor: number; // [-]
+  functions?: {
+    moistureStorage?: MaterialFunction;      // w(φ) - water content vs relative humidity
+    liquidTransport?: MaterialFunction;      // Dw(w) - liquid diffusivity vs water content
+    vaporDiffusion?: MaterialFunction;       // μ(φ) - vapor resistance vs relative humidity
+    moistureDependentThermalConductivity?: MaterialFunction;  // λ(w) - thermal conductivity vs moisture
+  };
 }
 
 export interface Layer {
