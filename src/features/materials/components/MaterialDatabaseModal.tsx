@@ -46,14 +46,18 @@ export function MaterialDatabaseModal({
     return subcategories.filter((sub) => sub.categoryId === selectedCategory);
   }, [selectedCategory, subcategories]);
 
-  // Filter materials by selected subcategory and search query
+  // Filter materials by category, subcategory, and search query
   const filteredMaterials = useMemo(() => {
     let result = materials;
 
+    // Filter by subcategory if selected, otherwise by category
     if (selectedSubcategory) {
       result = result.filter((mat) => mat.subcategory === selectedSubcategory);
+    } else if (selectedCategory) {
+      result = result.filter((mat) => mat.category === selectedCategory);
     }
 
+    // Additional filter by search query
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       result = result.filter(
@@ -65,7 +69,7 @@ export function MaterialDatabaseModal({
     }
 
     return result;
-  }, [selectedSubcategory, searchQuery, materials]);
+  }, [selectedCategory, selectedSubcategory, searchQuery, materials]);
 
   // Virtual scrolling for categories
   const categoriesParentRef = useRef<HTMLDivElement | null>(null);
@@ -239,9 +243,9 @@ export function MaterialDatabaseModal({
               ref={materialsParentRef}
               className="flex-1 overflow-auto"
             >
-              {!selectedSubcategory && !searchQuery ? (
+              {!selectedCategory && !searchQuery ? (
                 <div className="flex items-center justify-center h-full text-greydark text-sm">
-                  Select a subcategory
+                  Select a category to browse materials
                 </div>
               ) : filteredMaterials.length === 0 ? (
                 <div className="flex items-center justify-center h-full text-greydark text-sm">
