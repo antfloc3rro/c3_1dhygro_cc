@@ -45,7 +45,7 @@ export function MainLayout() {
   const totalThickness = useAppStore((state) => state.assembly.totalThickness)
   const uValue = useAppStore((state) => state.assembly.uValue)
   const simulationStatus = useAppStore((state) => state.simulation.status)
-  const { openModal } = useAppStore((state) => state.actions)
+  const { openModal, selectLayer } = useAppStore((state) => state.actions)
 
   const tabs: TabItem[] = [
     {
@@ -189,7 +189,10 @@ export function MainLayout() {
                       backgroundColor: '#4AB79F',
                       color: '#FFFFFF',
                     }}
-                    onClick={() => openModal('material-database')}
+                    onClick={() => {
+                      selectLayer(null)
+                      openModal('material-database')
+                    }}
                   >
                     + Add First Layer
                   </button>
@@ -198,7 +201,13 @@ export function MainLayout() {
 
               {/* Data Table */}
               {layers.length > 0 && (
-                <DataTable layers={layers} onAddLayer={() => openModal('material-database')} />
+                <DataTable
+                  layers={layers}
+                  onAddLayer={() => {
+                    selectLayer(null)
+                    openModal('material-database')
+                  }}
+                />
               )}
             </div>
           </div>

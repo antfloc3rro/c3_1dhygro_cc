@@ -73,6 +73,9 @@ export function ModalManager() {
             };
             addLayer(newLayer);
           }
+
+          // Close modal after selection
+          closeModal();
         }}
         categories={mockMaterialCategories}
         subcategories={mockMaterialSubcategories}

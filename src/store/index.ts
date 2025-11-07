@@ -60,11 +60,24 @@ const initialAssemblyState: AssemblyState = {
       id: 'surface_exterior',
       name: 'Exterior Surface',
       type: 'exterior',
+      coefficientMode: 'standard',
+      coefficients: {
+        heatTransferCoefficient: 25.0, // Standard exterior
+        shortWaveRadiationAbsorptivity: 0.6,
+        longWaveRadiationEmissivity: 0.9,
+        rainAbsorptionFactor: 0.7,
+      },
     },
     interior: {
       id: 'surface_interior',
       name: 'Interior Surface',
       type: 'interior',
+      coefficientMode: 'standard',
+      coefficients: {
+        heatTransferCoefficient: 8.0, // Standard interior
+        shortWaveRadiationAbsorptivity: 0.6,
+        longWaveRadiationEmissivity: 0.9,
+      },
     },
   },
   monitors: [],

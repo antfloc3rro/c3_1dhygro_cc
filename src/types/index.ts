@@ -24,6 +24,15 @@ export interface Surface {
   id: string;
   name: string;
   type: 'exterior' | 'interior' | 'interface';
+  coefficientMode?: string; // 'standard', 'custom', etc.
+  coefficients?: {
+    heatTransferCoefficient: number; // α [W/(m²·K)]
+    shortWaveRadiationAbsorptivity: number; // [-] 0-1
+    longWaveRadiationEmissivity: number; // [-] 0-1
+    sdValue?: number; // sd-value [m] for vapor diffusion resistance
+    rainAbsorptionFactor?: number; // [-] 0-1 (exterior only)
+    rainDepositionFactor?: number; // [-] (exterior only)
+  };
 }
 
 export interface Monitor {

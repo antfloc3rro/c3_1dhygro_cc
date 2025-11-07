@@ -247,7 +247,7 @@ function SortableRow({
           max={10}
           decimals={3}
           unit="m"
-          className="text-sm text-right"
+          className="text-sm text-right w-full"
         />
       </div>
 
