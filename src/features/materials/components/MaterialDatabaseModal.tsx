@@ -90,23 +90,8 @@ export function MaterialDatabaseModal({
     return result;
   }, [selectedCategory, selectedSubcategory, searchQuery, materials]);
 
-  // Virtual scrolling for categories
-  const categoriesParentRef = useRef<HTMLDivElement | null>(null);
-  const categoriesVirtualizer = useVirtualizer({
-    count: categories.length,
-    getScrollElement: () => categoriesParentRef.current,
-    estimateSize: () => 48,
-    overscan: 5,
-  });
-
-  // Virtual scrolling for subcategories
-  const subcategoriesParentRef = useRef<HTMLDivElement | null>(null);
-  const subcategoriesVirtualizer = useVirtualizer({
-    count: filteredSubcategories.length,
-    getScrollElement: () => subcategoriesParentRef.current,
-    estimateSize: () => 48,
-    overscan: 5,
-  });
+  // No virtual scrolling needed for categories (only 7 items)
+  // No virtual scrolling needed for subcategories (small lists)
 
   // Virtual scrolling for materials
   const materialsParentRef = useRef<HTMLDivElement | null>(null);
@@ -157,47 +142,33 @@ export function MaterialDatabaseModal({
             <div className="px-md py-sm border-b border-greylight bg-greylight/5 font-medium text-sm">
               Categories
             </div>
-            <div
-              ref={categoriesParentRef}
-              className="flex-1 overflow-auto"
-            >
-              <div
-                style={{
-                  height: `${categoriesVirtualizer.getTotalSize()}px`,
-                  width: '100%',
-                  position: 'relative',
-                }}
-              >
-                {categoriesVirtualizer.getVirtualItems().map((virtualItem) => {
-                  const category = categories[virtualItem.index];
-                  const isSelected = selectedCategory === category.id;
+            <div className="flex-1 overflow-auto">
+              {categories.map((category) => {
+                const isSelected = selectedCategory === category.id;
+                // Calculate actual count from materials
+                const actualCount = materials.filter(m => m.category === category.id).length;
 
-                  return (
-                    <button
-                      key={category.id}
-                      onClick={() => {
-                        setSelectedCategory(category.id);
-                        setSelectedSubcategory(null);
-                        setSelectedMaterial(null);
-                      }}
-                      className={cn(
-                        'absolute left-0 w-full px-md py-sm text-left text-sm transition-colors duration-200',
-                        'hover:bg-greylight/10',
-                        isSelected && 'bg-bluegreen/10 border-l-2 border-bluegreen font-medium'
-                      )}
-                      style={{
-                        top: `${virtualItem.start}px`,
-                        height: `${virtualItem.size}px`,
-                      }}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span>{category.name}</span>
-                        <span className="text-greydark text-xs">({category.count})</span>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
+                return (
+                  <button
+                    key={category.id}
+                    onClick={() => {
+                      setSelectedCategory(category.id);
+                      setSelectedSubcategory(null);
+                      setSelectedMaterial(null);
+                    }}
+                    className={cn(
+                      'w-full px-md py-sm text-left text-sm transition-colors duration-200',
+                      'hover:bg-greylight/10',
+                      isSelected && 'bg-bluegreen/10 border-l-2 border-bluegreen font-medium'
+                    )}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span>{category.name}</span>
+                      <span className="text-greydark text-xs">({actualCount})</span>
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
@@ -206,51 +177,37 @@ export function MaterialDatabaseModal({
             <div className="px-md py-sm border-b border-greylight bg-greylight/5 font-medium text-sm">
               Subcategories
             </div>
-            <div
-              ref={subcategoriesParentRef}
-              className="flex-1 overflow-auto"
-            >
+            <div className="flex-1 overflow-auto">
               {!selectedCategory ? (
                 <div className="flex items-center justify-center h-full text-greydark text-sm">
                   Select a category
                 </div>
               ) : (
-                <div
-                  style={{
-                    height: `${subcategoriesVirtualizer.getTotalSize()}px`,
-                    width: '100%',
-                    position: 'relative',
-                  }}
-                >
-                  {subcategoriesVirtualizer.getVirtualItems().map((virtualItem) => {
-                    const subcategory = filteredSubcategories[virtualItem.index];
-                    const isSelected = selectedSubcategory === subcategory.id;
+                filteredSubcategories.map((subcategory) => {
+                  const isSelected = selectedSubcategory === subcategory.id;
+                  // Calculate actual count from materials
+                  const actualCount = materials.filter(m => m.subcategory === subcategory.id).length;
 
-                    return (
-                      <button
-                        key={subcategory.id}
-                        onClick={() => {
-                          setSelectedSubcategory(subcategory.id);
-                          setSelectedMaterial(null);
-                        }}
-                        className={cn(
-                          'absolute left-0 w-full px-md py-sm text-left text-sm transition-colors duration-200',
-                          'hover:bg-greylight/10',
-                          isSelected && 'bg-bluegreen/10 border-l-2 border-bluegreen font-medium'
-                        )}
-                        style={{
-                          top: `${virtualItem.start}px`,
-                          height: `${virtualItem.size}px`,
-                        }}
-                      >
-                        <div className="flex items-center justify-between">
-                          <span>{subcategory.name}</span>
-                          <span className="text-greydark text-xs">({subcategory.count})</span>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
+                  return (
+                    <button
+                      key={subcategory.id}
+                      onClick={() => {
+                        setSelectedSubcategory(subcategory.id);
+                        setSelectedMaterial(null);
+                      }}
+                      className={cn(
+                        'w-full px-md py-sm text-left text-sm transition-colors duration-200',
+                        'hover:bg-greylight/10',
+                        isSelected && 'bg-bluegreen/10 border-l-2 border-bluegreen font-medium'
+                      )}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span>{subcategory.name}</span>
+                        <span className="text-greydark text-xs">({actualCount})</span>
+                      </div>
+                    </button>
+                  );
+                })
               )}
             </div>
           </div>
