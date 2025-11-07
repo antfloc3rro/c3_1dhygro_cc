@@ -1,13 +1,16 @@
 import { useState } from 'react';
 import { Input } from '../../../components/ui/Input';
 import { Label } from '../../../components/ui/Label';
-import { ClimateType, ClimateApplication, AnnualStatistics, SineCurveData } from '../types';
+import { ClimateType, ClimateApplication, AnnualStatistics, SineCurveData, LocationSearchResult } from '../types';
+import { MapPin, Database } from 'lucide-react';
 
 interface ClimateStatisticsPanelProps {
   climateType: ClimateType;
   application: ClimateApplication;
   statistics?: AnnualStatistics;
   sineCurveData?: SineCurveData;
+  selectedLocation?: LocationSearchResult | null;
+  uploadedFileName?: string;
   heatTransferResistance?: number;
   rainCoefficient?: number;
   onHeatTransferResistanceChange?: (value: number) => void;
@@ -19,6 +22,8 @@ export function ClimateStatisticsPanel({
   application,
   statistics,
   sineCurveData,
+  selectedLocation,
+  uploadedFileName,
   heatTransferResistance = 0.0588,
   rainCoefficient = 0.7,
   onHeatTransferResistanceChange,
@@ -53,6 +58,73 @@ export function ClimateStatisticsPanel({
 
   return (
     <div className="w-[320px] border-l border-greylight bg-white p-md space-y-lg overflow-y-auto">
+      {/* Weather Station Info */}
+      {climateType === 'weather-station' && selectedLocation && (
+        <div className="space-y-md">
+          <h3 className="text-xs font-semibold uppercase text-greydark">Selected Location</h3>
+
+          <div className="bg-bluegreen/10 border border-bluegreen/30 rounded-lg p-md space-y-sm">
+            <div className="flex items-start gap-sm">
+              <MapPin className="w-4 h-4 text-bluegreen flex-shrink-0 mt-xs" />
+              <div className="flex-1 min-w-0">
+                <div className="font-semibold text-sm">{selectedLocation.city}</div>
+                <div className="text-xs text-greydark">{selectedLocation.country}</div>
+              </div>
+            </div>
+
+            <div className="text-xs space-y-xs">
+              <div className="grid grid-cols-2 gap-xs">
+                <div>
+                  <span className="text-greydark">Latitude:</span>
+                  <span className="ml-xs font-mono">{selectedLocation.latitude.toFixed(2)}°</span>
+                </div>
+                <div>
+                  <span className="text-greydark">Longitude:</span>
+                  <span className="ml-xs font-mono">{selectedLocation.longitude.toFixed(2)}°</span>
+                </div>
+              </div>
+              <div>
+                <span className="text-greydark">Elevation:</span>
+                <span className="ml-xs font-mono">{selectedLocation.elevation} m</span>
+              </div>
+            </div>
+
+            {selectedLocation.availableDatasets && selectedLocation.availableDatasets.length > 0 && (
+              <div className="pt-sm border-t border-bluegreen/20">
+                <div className="flex items-center gap-xs mb-xs">
+                  <Database className="w-3 h-3 text-bluegreen" />
+                  <span className="text-xs font-medium text-greydark">Available Dataset</span>
+                </div>
+                <div className="text-xs">
+                  <div className="font-medium">{selectedLocation.availableDatasets[0].source}</div>
+                  <div className="text-greydark">{selectedLocation.availableDatasets[0].period}</div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {selectedLocation.comment && (
+            <div className="text-xs text-greydark italic bg-greylight/10 p-sm rounded">
+              {selectedLocation.comment}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Upload File Info */}
+      {climateType === 'upload' && uploadedFileName && (
+        <div className="space-y-md">
+          <h3 className="text-xs font-semibold uppercase text-greydark">Uploaded File</h3>
+
+          <div className="bg-green/10 border border-green/30 rounded-lg p-md">
+            <div className="text-xs">
+              <div className="font-medium text-sm mb-xs truncate">{uploadedFileName}</div>
+              <div className="text-greydark">Climate data successfully loaded</div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Annual Statistics */}
       {calculatedStats && (
         <div className="space-y-md">
@@ -222,14 +294,12 @@ export function ClimateStatisticsPanel({
         </div>
       )}
 
-      {/* Empty State */}
-      {!calculatedStats && (
+      {/* Empty State - Only show if nothing else is displayed */}
+      {!calculatedStats && !selectedLocation && !uploadedFileName && (
         <div className="flex items-center justify-center h-48 text-center">
           <div className="text-sm text-greydark">
-            {climateType === 'weather-station' && 'Select a location to view statistics'}
-            {climateType === 'standard' && 'Select a standard to view typical conditions'}
-            {climateType === 'sine-curve' && 'Configure sine curves to see statistics'}
-            {climateType === 'upload' && 'Upload a file to view climate data'}
+            {climateType === 'weather-station' && 'Select a location on the map'}
+            {climateType === 'upload' && 'Upload a climate file to continue'}
           </div>
         </div>
       )}

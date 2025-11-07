@@ -268,6 +268,8 @@ export function ClimateSelectionModal({
               application={application}
               statistics={uploadedFile?.statistics}
               sineCurveData={climateType === 'sine-curve' ? sineCurveData : undefined}
+              selectedLocation={selectedLocation}
+              uploadedFileName={uploadedFile?.fileName}
               heatTransferResistance={heatTransferResistance}
               rainCoefficient={rainCoefficient}
               onHeatTransferResistanceChange={setHeatTransferResistance}
