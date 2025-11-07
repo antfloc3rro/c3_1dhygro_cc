@@ -41,8 +41,89 @@ export function InspectorPanel() {
 
   return (
     <div className="w-80 min-w-[280px] bg-white border-l border-neutral-200 overflow-y-auto p-4">
-      {/* When Layer Selected */}
-      {selectedLayer && (
+      {/* Priority order: Monitor > Surface > Layer > Nothing */}
+      {/* When Monitor Selected (highest priority) */}
+      {selectedMonitor ? (
+        <div className="space-y-4">
+          {/* Quick Actions */}
+          <div className="space-y-2">
+            <Button
+              variant="primary"
+              icon={Target}
+              className="w-full"
+              onClick={() => openModal('monitor-config')}
+            >
+              Edit Monitor Settings
+            </Button>
+            <Button
+              variant="secondary"
+              icon={Trash2}
+              className="w-full border-red text-red hover:bg-red-50"
+              onClick={() => {
+                if (confirm(`Remove monitor "${selectedMonitor.name}"?`)) {
+                  deleteMonitor(selectedMonitor.id)
+                }
+              }}
+            >
+              Remove Monitor
+            </Button>
+          </div>
+
+          {/* Properties Preview */}
+          <div className="bg-neutral-50 border border-neutral-200 rounded-md p-3">
+            <p className="text-xs font-bold uppercase mb-2" style={{ color: '#5E5A58' }}>
+              Monitor
+            </p>
+            <p className="text-sm font-bold mb-2" style={{ color: '#33302F' }}>
+              {selectedMonitor.name}
+            </p>
+            <div className="space-y-1 text-xs font-mono" style={{ color: '#5E5A58' }}>
+              <div className="flex justify-between">
+                <span>Layer:</span>
+                <span>{layers.find((l) => l.id === selectedMonitor.layerId)?.name || 'Unknown'}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Position:</span>
+                <span>{(selectedMonitor.position * 100).toFixed(1)}%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : selectedSurface ? (
+        <div className="space-y-4">
+          {/* Quick Actions */}
+          <div>
+            <Button
+              variant="primary"
+              icon={Settings}
+              className="w-full"
+              onClick={() => openModal('surface-coefficients')}
+            >
+              Edit Surface Coefficients
+            </Button>
+          </div>
+
+          {/* Properties Preview */}
+          <div className="bg-neutral-50 border border-neutral-200 rounded-md p-3">
+            <p className="text-xs font-bold uppercase mb-2" style={{ color: '#5E5A58' }}>
+              Surface: {selectedSurface.type === 'exterior' ? 'Exterior' : 'Interior'}
+            </p>
+            <p className="text-sm font-bold mb-2" style={{ color: '#33302F' }}>
+              {selectedSurface.name}
+            </p>
+            <div className="space-y-1 text-xs font-mono" style={{ color: '#5E5A58' }}>
+              <div className="flex justify-between">
+                <span>Type:</span>
+                <span className="capitalize">{selectedSurface.type}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Transfer mode:</span>
+                <span>{selectedSurface.coefficientMode || 'Standard'}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : selectedLayer ? (
         <div className="space-y-4">
           {/* Quick Actions */}
           <div className="space-y-2">
@@ -125,96 +206,7 @@ export function InspectorPanel() {
             </div>
           </div>
         </div>
-      )}
-
-      {/* When Surface Selected */}
-      {selectedSurface && (
-        <div className="space-y-4">
-          {/* Quick Actions */}
-          <div>
-            <Button
-              variant="primary"
-              icon={Settings}
-              className="w-full"
-              onClick={() => openModal('surface-coefficients')}
-            >
-              Edit Surface Coefficients
-            </Button>
-          </div>
-
-          {/* Properties Preview */}
-          <div className="bg-neutral-50 border border-neutral-200 rounded-md p-3">
-            <p className="text-xs font-bold uppercase mb-2" style={{ color: '#5E5A58' }}>
-              Surface: {selectedSurface.type === 'exterior' ? 'Exterior' : 'Interior'}
-            </p>
-            <p className="text-sm font-bold mb-2" style={{ color: '#33302F' }}>
-              {selectedSurface.name}
-            </p>
-            <div className="space-y-1 text-xs font-mono" style={{ color: '#5E5A58' }}>
-              <div className="flex justify-between">
-                <span>Type:</span>
-                <span className="capitalize">{selectedSurface.type}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Transfer mode:</span>
-                <span>{selectedSurface.coefficientMode || 'Standard'}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* When Monitor Selected */}
-      {selectedMonitor && (
-        <div className="space-y-4">
-          {/* Quick Actions */}
-          <div className="space-y-2">
-            <Button
-              variant="primary"
-              icon={Target}
-              className="w-full"
-              onClick={() => openModal('monitor-config')}
-            >
-              Edit Monitor Settings
-            </Button>
-            <Button
-              variant="secondary"
-              icon={Trash2}
-              className="w-full border-red text-red hover:bg-red-50"
-              onClick={() => {
-                if (confirm(`Remove monitor "${selectedMonitor.name}"?`)) {
-                  deleteMonitor(selectedMonitor.id)
-                }
-              }}
-            >
-              Remove Monitor
-            </Button>
-          </div>
-
-          {/* Properties Preview */}
-          <div className="bg-neutral-50 border border-neutral-200 rounded-md p-3">
-            <p className="text-xs font-bold uppercase mb-2" style={{ color: '#5E5A58' }}>
-              Monitor
-            </p>
-            <p className="text-sm font-bold mb-2" style={{ color: '#33302F' }}>
-              {selectedMonitor.name}
-            </p>
-            <div className="space-y-1 text-xs font-mono" style={{ color: '#5E5A58' }}>
-              <div className="flex justify-between">
-                <span>Layer:</span>
-                <span>{layers.find((l) => l.id === selectedMonitor.layerId)?.name || 'Unknown'}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Position:</span>
-                <span>{(selectedMonitor.position * 100).toFixed(1)}%</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* When Nothing Selected */}
-      {!selectedLayer && !selectedSurface && !selectedMonitor && (
+      ) : (
         <div className="flex flex-col items-center justify-center py-12 px-6 text-center bg-neutral-50 rounded-lg border border-neutral-200">
           <Info className="w-8 h-8 mb-3" style={{ color: '#4597BF' }} />
           <p className="text-sm" style={{ color: '#5E5A58' }}>
