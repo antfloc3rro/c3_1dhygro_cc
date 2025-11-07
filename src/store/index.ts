@@ -118,7 +118,7 @@ const initialProjectState: ProjectState = {
   cases: [
     {
       id: 'case1',
-      name: DEFAULT_CASE_NAME,
+      name: DEFAULT_PROJECT_NAME, // Use project name for case name
       status: 'draft',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
