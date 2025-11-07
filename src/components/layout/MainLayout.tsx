@@ -168,6 +168,7 @@ export function MainLayout() {
                 uValue={uValue}
                 gridVisible={gridVisible}
                 onToggleGrid={() => setGridVisible(!gridVisible)}
+                onAddMonitor={() => openModal('monitor-config')}
               />
 
               {/* Visual Assembly */}

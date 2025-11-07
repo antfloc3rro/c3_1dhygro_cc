@@ -6,8 +6,8 @@ import { Select } from '../../../components/ui/Select';
 import { Button } from '../../../components/ui/Button';
 import { Collapsible } from '../../../components/ui/Collapsible';
 import { Check, AlertCircle } from 'lucide-react';
-import { Monitor, MonitorType, MonitorVariables, MonitorPreset } from '../types';
-import { Layer } from '../../../store/types';
+import { Monitor, MonitorType, MonitorVariables, Layer } from '../../../types';
+import { MonitorPreset } from '../types';
 
 interface MonitorConfigurationModalProps {
   isOpen: boolean;
@@ -29,7 +29,8 @@ export function MonitorConfigurationModal({
   presets,
 }: MonitorConfigurationModalProps) {
   const [name, setName] = useState(monitor?.name || 'Monitor 1');
-  const [position, setPosition] = useState(monitor?.position || 0);
+  const [positionMm, setPositionMm] = useState(0); // Position in mm from exterior
+  const [layerId, setLayerId] = useState<string>(layers.length > 0 ? layers[0].id : '');
   const [type, setType] = useState<MonitorType>(monitor?.type || 'point');
   const [variables, setVariables] = useState<MonitorVariables>(
     monitor?.variables || {
@@ -46,16 +47,47 @@ export function MonitorConfigurationModal({
   );
   const [selectedPreset, setSelectedPreset] = useState<string>('custom');
 
-  // Reset when monitor changes
+  // Reset when monitor changes or modal opens
   useEffect(() => {
-    if (monitor) {
+    if (monitor && monitor.layerId) {
+      // Editing existing monitor - convert from relative position to mm
+      const layer = layers.find(l => l.id === monitor.layerId);
+      if (layer) {
+        // Calculate position in mm from relative position within layer
+        const layerStartMm = layers.slice(0, layers.findIndex(l => l.id === monitor.layerId))
+          .reduce((sum, l) => sum + l.thickness * 1000, 0);
+        const positionInLayerMm = monitor.position * layer.thickness * 1000;
+        setPositionMm(layerStartMm + positionInLayerMm);
+        setLayerId(monitor.layerId);
+      }
       setName(monitor.name);
-      setPosition(monitor.position);
-      setType(monitor.type);
-      setVariables(monitor.variables);
-      setOutputInterval(monitor.outputInterval);
+      setType(monitor.type || 'point');
+      setVariables(monitor.variables || {
+        temperature: true,
+        relativeHumidity: true,
+        waterContent: false,
+        heatFlux: false,
+        vaporFlux: false,
+        liquidFlux: false,
+      });
+      setOutputInterval(monitor.outputInterval || 'hourly');
+    } else if (isOpen && layers.length > 0) {
+      // New monitor - reset to defaults
+      setName('Monitor 1');
+      setPositionMm(0);
+      setLayerId(layers[0].id);
+      setType('point');
+      setVariables({
+        temperature: true,
+        relativeHumidity: true,
+        waterContent: false,
+        heatFlux: false,
+        vaporFlux: false,
+        liquidFlux: false,
+      });
+      setOutputInterval('hourly');
     }
-  }, [monitor]);
+  }, [monitor, isOpen, layers]);
 
   const handlePresetChange = (presetId: string) => {
     setSelectedPreset(presetId);
@@ -71,6 +103,25 @@ export function MonitorConfigurationModal({
   };
 
   const handleSave = () => {
+    // Find the layer that contains this position
+    let cumulativeThickness = 0;
+    let selectedLayer = layers[0];
+    let relativePosition = 0;
+
+    for (const layer of layers) {
+      const layerThicknessMm = layer.thickness * 1000;
+      if (positionMm >= cumulativeThickness && positionMm <= cumulativeThickness + layerThicknessMm) {
+        selectedLayer = layer;
+        // Calculate position within this layer (0-1)
+        relativePosition = (positionMm - cumulativeThickness) / layerThicknessMm;
+        break;
+      }
+      cumulativeThickness += layerThicknessMm;
+    }
+
+    // Clamp to 0-1 range
+    relativePosition = Math.max(0, Math.min(1, relativePosition));
+
     // Generate random color for new monitors
     const colors = ['#E18E2A', '#4AB79F', '#C04343', '#7B68A6', '#F7C741'];
     const color = monitor?.color || colors[Math.floor(Math.random() * colors.length)];
@@ -78,7 +129,8 @@ export function MonitorConfigurationModal({
     const monitorData: Monitor = {
       id: monitor?.id || `monitor-${Date.now()}`,
       name,
-      position,
+      position: relativePosition,
+      layerId: selectedLayer.id,
       type,
       variables,
       outputInterval,
@@ -162,25 +214,43 @@ export function MonitorConfigurationModal({
         <div>
           <NumberInput
             label="Position from Exterior Surface"
-            value={position}
+            value={positionMm}
             onChange={(val) => {
-              setPosition(val);
-              setSelectedPreset('custom');
+              if (val !== null) {
+                setPositionMm(val);
+                setSelectedPreset('custom');
+              }
             }}
             unit="mm"
             min={0}
-            max={totalThickness}
+            max={totalThickness * 1000}
             step={1}
-            helperText={`Total assembly thickness: ${totalThickness.toFixed(1)} mm`}
+            helperText={`Total assembly thickness: ${(totalThickness * 1000).toFixed(1)} mm`}
           />
 
           {/* Visual indicator of position */}
           <div className="mt-sm border border-greylight rounded p-sm bg-greylight/5">
             <div className="text-xs text-greydark mb-1">Monitor Position</div>
             <div className="relative h-8 bg-white border border-greylight rounded">
+              {/* Layer boundaries */}
+              {layers.map((layer, index) => {
+                const startMm = layers.slice(0, index).reduce((sum, l) => sum + l.thickness * 1000, 0);
+                const layerWidthPercent = (layer.thickness * 1000) / (totalThickness * 1000) * 100;
+                return (
+                  <div
+                    key={layer.id}
+                    className="absolute top-0 bottom-0 border-r border-greylight"
+                    style={{
+                      left: `${(startMm / (totalThickness * 1000)) * 100}%`,
+                      width: `${layerWidthPercent}%`
+                    }}
+                  />
+                );
+              })}
+              {/* Monitor position indicator */}
               <div
-                className="absolute top-0 bottom-0 w-0.5 bg-orange"
-                style={{ left: `${(position / totalThickness) * 100}%` }}
+                className="absolute top-0 bottom-0 w-0.5 bg-orange z-10"
+                style={{ left: `${(positionMm / (totalThickness * 1000)) * 100}%` }}
               >
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 bg-orange rounded-full border-2 border-white" />
               </div>

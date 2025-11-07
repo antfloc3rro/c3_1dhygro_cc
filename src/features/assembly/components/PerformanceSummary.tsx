@@ -1,5 +1,5 @@
 import React from 'react'
-import { Layers, CheckCircle, AlertCircle, Eye, EyeOff } from 'lucide-react'
+import { Layers, CheckCircle, AlertCircle, Eye, EyeOff, Target } from 'lucide-react'
 import { cn } from '@/utils/index'
 import { Card } from '@/components/ui/Card'
 
@@ -8,6 +8,7 @@ interface PerformanceSummaryProps {
   uValue: number | null
   gridVisible: boolean
   onToggleGrid: () => void
+  onAddMonitor?: () => void
 }
 
 /**
@@ -33,6 +34,7 @@ export function PerformanceSummary({
   uValue,
   gridVisible,
   onToggleGrid,
+  onAddMonitor,
 }: PerformanceSummaryProps) {
   // U-Value validation (typical range: 0.1 - 3.0 W/(m²·K))
   const uValueStatus =
@@ -110,6 +112,27 @@ export function PerformanceSummary({
           </div>
         </div>
       </Card>
+
+      {/* Card 4: Add Monitor */}
+      {onAddMonitor && (
+        <Card
+          padding="md"
+          className="h-20 cursor-pointer transition-all duration-200 hover:shadow-md hover:ring-2 hover:ring-orange/50"
+          onClick={onAddMonitor}
+        >
+          <div className="flex items-center gap-3 h-full">
+            <Target className="w-[18px] h-[18px]" style={{ color: '#E18E2A' }} />
+            <div>
+              <div className="text-xs font-medium" style={{ color: '#5E5A58' }}>
+                Monitors
+              </div>
+              <div className="text-sm font-semibold" style={{ color: '#33302F' }}>
+                + Add Monitor
+              </div>
+            </div>
+          </div>
+        </Card>
+      )}
     </div>
   )
 }

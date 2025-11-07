@@ -35,11 +35,26 @@ export interface Surface {
   };
 }
 
+export type MonitorType = 'point' | 'average' | 'profile';
+
+export interface MonitorVariables {
+  temperature: boolean;
+  relativeHumidity: boolean;
+  waterContent: boolean;
+  heatFlux: boolean;
+  vaporFlux: boolean;
+  liquidFlux: boolean;
+}
+
 export interface Monitor {
   id: string;
   position: number; // 0-1 (relative position in layer)
   layerId: string;
   name: string;
+  type?: MonitorType;
+  variables?: MonitorVariables;
+  outputInterval?: 'hourly' | 'daily' | 'monthly';
+  color?: string;
 }
 
 export interface Assembly {
