@@ -209,6 +209,7 @@ export function MainLayout() {
                   {gridVisible && selectedLayer && (
                     <GridDiscretization
                       layer={selectedLayer}
+                      monitors={monitors}
                       onCellClick={handleGridCellClick}
                     />
                   )}
