@@ -174,20 +174,20 @@ export function AssemblyVisual({
             {/* Grid Overlay */}
             {gridVisible && (
               <div
-                className="absolute inset-0 pointer-events-none"
+                className="absolute inset-0 pointer-events-none z-10"
                 style={{
                   backgroundImage: `
                     repeating-linear-gradient(
                       0deg,
-                      rgba(69, 151, 191, 0.15) 0px,
-                      rgba(69, 151, 191, 0.15) 1px,
+                      rgba(69, 151, 191, 0.3) 0px,
+                      rgba(69, 151, 191, 0.3) 1px,
                       transparent 1px,
                       transparent 20px
                     ),
                     repeating-linear-gradient(
                       90deg,
-                      rgba(69, 151, 191, 0.15) 0px,
-                      rgba(69, 151, 191, 0.15) 1px,
+                      rgba(69, 151, 191, 0.3) 0px,
+                      rgba(69, 151, 191, 0.3) 1px,
                       transparent 1px,
                       transparent 20px
                     )

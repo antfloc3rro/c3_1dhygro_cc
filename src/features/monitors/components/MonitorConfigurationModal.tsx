@@ -3,9 +3,8 @@ import { Modal } from '../../../components/ui/Modal';
 import { Input } from '../../../components/ui/Input';
 import { NumberInput } from '../../../components/ui/NumberInput';
 import { Select } from '../../../components/ui/Select';
-import { Button } from '../../../components/ui/Button';
 import { Collapsible } from '../../../components/ui/Collapsible';
-import { Check, AlertCircle } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 import { Monitor, MonitorType, MonitorVariables, Layer } from '../../../types';
 import { MonitorPreset } from '../types';
 
@@ -102,7 +101,13 @@ export function MonitorConfigurationModal({
     }
   };
 
-  const handleSave = () => {
+  const handleClose = () => {
+    // Validate before saving
+    if (selectedVariableCount === 0 || !name.trim() || layers.length === 0) {
+      onClose();
+      return;
+    }
+
     // Find the layer that contains this position
     let cumulativeThickness = 0;
     let selectedLayer = layers[0];
@@ -175,7 +180,7 @@ export function MonitorConfigurationModal({
   return (
     <Modal
       isOpen={isOpen}
-      onClose={onClose}
+      onClose={handleClose}
       title={monitor ? 'Edit Monitor' : 'Add Monitor'}
       size="lg"
     >
@@ -369,26 +374,11 @@ export function MonitorConfigurationModal({
             <div className="text-sm">
               <div className="font-medium">No variables selected</div>
               <div className="text-greydark mt-1">
-                Please select at least one output variable to monitor.
+                Please select at least one output variable to monitor. Close this modal to save your changes.
               </div>
             </div>
           </div>
         )}
-      </div>
-
-      {/* Footer Actions */}
-      <div className="flex justify-end gap-sm mt-lg">
-        <Button variant="secondary" onClick={onClose}>
-          Cancel
-        </Button>
-        <Button
-          variant="primary"
-          onClick={handleSave}
-          disabled={selectedVariableCount === 0 || !name.trim()}
-          icon={Check}
-        >
-          {monitor ? 'Save Changes' : 'Add Monitor'}
-        </Button>
       </div>
     </Modal>
   );
