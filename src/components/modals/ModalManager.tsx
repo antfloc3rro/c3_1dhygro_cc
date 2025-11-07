@@ -1,5 +1,6 @@
 import { useAppStore } from '@/store/index';
 import { MaterialDatabaseModal } from '@/features/materials/components/MaterialDatabaseModal';
+import { MaterialPropertiesModal } from '@/features/materials/components/MaterialPropertiesModal';
 import { ClimateSelectionModal } from '@/features/climate/components/ClimateSelectionModal';
 import { SurfaceCoefficientsModal } from '@/features/surfaces/components/SurfaceCoefficientsModal';
 import { MonitorConfigurationModal } from '@/features/monitors/components/MonitorConfigurationModal';
@@ -133,6 +134,23 @@ export function ModalManager() {
         totalThickness={totalThickness}
         presets={mockMonitorPresets}
       />
+
+      {/* Material Properties Modal */}
+      {selectedLayer && (
+        <MaterialPropertiesModal
+          isOpen={openModal === 'material-properties'}
+          onClose={closeModal}
+          material={selectedLayer.material}
+          onSave={(updates) => {
+            updateLayer(selectedLayer.id, {
+              material: {
+                ...selectedLayer.material,
+                ...updates,
+              },
+            });
+          }}
+        />
+      )}
     </>
   );
 }

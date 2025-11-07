@@ -135,7 +135,12 @@ export function InspectorPanel() {
             >
               Select from Database
             </Button>
-            <Button variant="secondary" icon={Settings} className="w-full" disabled>
+            <Button
+              variant="secondary"
+              icon={Settings}
+              className="w-full"
+              onClick={() => openModal('material-properties')}
+            >
               Edit Material Properties
             </Button>
           </div>
