@@ -563,6 +563,32 @@ export const useAppStore = create<AppState>()(
             theme: state.ui.theme,
           },
         }),
+        merge: (persistedState: any, currentState: AppState) => {
+          // Deep merge persisted state with initial state to handle new fields
+          return {
+            ...currentState,
+            ui: {
+              ...currentState.ui,
+              ...(persistedState?.ui || {}),
+              // Ensure modalPreferences always exists
+              modalPreferences: {
+                materialDatabase: {
+                  ...currentState.ui.modalPreferences.materialDatabase,
+                  ...(persistedState?.ui?.modalPreferences?.materialDatabase || {}),
+                },
+                climateSelection: {
+                  ...currentState.ui.modalPreferences.climateSelection,
+                  ...(persistedState?.ui?.modalPreferences?.climateSelection || {}),
+                },
+              },
+              // Ensure expandedSections always exists
+              expandedSections: {
+                ...currentState.ui.expandedSections,
+                ...(persistedState?.ui?.expandedSections || {}),
+              },
+            },
+          }
+        },
       }
     )
   )
